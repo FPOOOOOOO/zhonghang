@@ -106,7 +106,7 @@ void app_main(void)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
     wifi_init_softap();
     
-    esp_netif_get_ip_info(ap_netif, &ip_info);
-    ESP_LOGI(TAG, "THis AP has got an IP as:%s", ip4addr_ntoa((ip4_addr_t*)&ip_info.ip));
+    // esp_netif_get_ip_info(ap_netif, &ip_info);
+    // ESP_LOGI(TAG, "THis AP has got an IP as:%s", ip4addr_ntoa((ip4_addr_t*)&ip_info.ip));
 
 }

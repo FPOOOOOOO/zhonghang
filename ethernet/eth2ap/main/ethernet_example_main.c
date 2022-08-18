@@ -227,20 +227,6 @@ static void initialize_ethernet(void)
     config.stack_input = pkt_eth2wifi;
     ESP_ERROR_CHECK(esp_eth_driver_install(&config, &s_eth_handle));
 
-   //----------------------------------//
-    // char* ip= "10.13.21.17";
-    // char* gateway = "10.13.21.1";
-    // char* netmask = "255.255.255.0";
-    // //ESP_ERROR_CHECK(esp_netif_dhcpc_stop(eth_netif));
-    // esp_netif_ip_info_t eth;
-    // memset(&eth, 0, sizeof(esp_netif_ip_info_t));
-    // eth.ip.addr =esp_ip4addr_aton((const char *)ip);
-    // eth.netmask.addr = esp_ip4addr_aton((const char *)netmask);
-    // eth.gw.addr=esp_ip4addr_aton((const char *)gateway);
-    //esp_netif_set_ip_info(eth_netif,&eth);
-    //ESP_ERROR_CHECK(esp_netif_dhcps_start(eth_netif));
-    //----------------------------------//
-
 #if !CONFIG_EXAMPLE_USE_INTERNAL_ETHERNET
     /* The SPI Ethernet module might doesn't have a burned factory MAC address, we cat to set it manually.
        02:00:00 is a Locally Administered OUI range so should not be used except when testing on a LAN under your control.

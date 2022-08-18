@@ -31,9 +31,6 @@
 #include "esp_spi_flash.h"
 #include "driver/gpio.h"
 
-
-
-
 /*
 SPI receiver (slave) example.
 
@@ -50,11 +47,11 @@ sending a transaction. As soon as the transaction is done, the line gets set low
 Pins in use. The SPI Master can use the GPIO mux, so feel free to change these if needed.
 */
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-#define GPIO_HANDSHAKE 0 //2default added
-#define GPIO_MOSI 13     //12
-#define GPIO_MISO 12     //13
-#define GPIO_SCLK 14     //15
-#define GPIO_CS 15       //14
+#define GPIO_HANDSHAKE 0 // 2default added
+#define GPIO_MOSI 13     // 12
+#define GPIO_MISO 12     // 13
+#define GPIO_SCLK 14     // 15
+#define GPIO_CS 15       // 14
 
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define GPIO_HANDSHAKE 3
@@ -63,117 +60,146 @@ Pins in use. The SPI Master can use the GPIO mux, so feel free to change these i
 #define GPIO_SCLK 6
 #define GPIO_CS 10
 
-#endif //CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-
+#endif // CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
 
 #ifdef CONFIG_IDF_TARGET_ESP32
-#define RCV_HOST    HSPI_HOST
+#define RCV_HOST HSPI_HOST
 
 #elif defined CONFIG_IDF_TARGET_ESP32S2
-#define RCV_HOST    SPI2_HOST
+#define RCV_HOST SPI2_HOST
 
 #elif defined CONFIG_IDF_TARGET_ESP32C3
-#define RCV_HOST    SPI2_HOST
+#define RCV_HOST SPI2_HOST
 
 #endif
 
 static const char *TAG = "SPI_Slave_Receiver";
 static bool isReady = false;
 
-//Called after a transaction is queued and ready for pickup by master. We use this to set the handshake line high.
-void my_post_setup_cb(spi_slave_transaction_t *trans) {
-    //ESP_LOGI(TAG, "Ready for pick up \n\r");
-    //printf("Ready for pick up: \n\r");
-    isReady = true;
-    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<GPIO_HANDSHAKE));
-}
-
-//Called after transaction is sent/received. We use this to set the handshake line low.
-void my_post_trans_cb(spi_slave_transaction_t *trans) {
-    //ESP_LOGI(TAG, "Ready for pick up \n\r");
-    //printf("Transaction is sent/received: \n\r");
-    //isReady = false;
-    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<GPIO_HANDSHAKE));
-}
-
-//Main application
-void app_main(void)
+// Called after a transaction is queued and ready for pickup by master. We use this to set the handshake line high.
+void my_post_setup_cb(spi_slave_transaction_t *trans)
 {
-    int n=0;
+    // ESP_LOGI(TAG, "Ready for pick up \n\r");
+    // printf("Ready for pick up: \n\r");
+    isReady = true;
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1 << GPIO_HANDSHAKE));
+}
+
+// Called after transaction is sent/received. We use this to set the handshake line low.
+void my_post_trans_cb(spi_slave_transaction_t *trans)
+{
+    // ESP_LOGI(TAG, "Ready for pick up \n\r");
+    // printf("Transaction is sent/received: \n\r");
+    // isReady = false;
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << GPIO_HANDSHAKE));
+}
+
+static void spi_task(void *pvParameters)
+{
+    int n = 0;
     esp_err_t ret;
 
-    //Configuration for the SPI bus
-    spi_bus_config_t buscfg={
-        .mosi_io_num=GPIO_MOSI,
-        .miso_io_num=GPIO_MISO,
-        .sclk_io_num=GPIO_SCLK,
-        .flags=SPICOMMON_BUSFLAG_IOMUX_PINS, //added IOMUX
-        .quadwp_io_num = -1,       //added -1 default
+    // Configuration for the SPI bus
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = GPIO_MOSI,
+        .miso_io_num = GPIO_MISO,
+        .sclk_io_num = GPIO_SCLK,
+        .flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
+        .quadwp_io_num = -1,                   // added -1 default
         .quadhd_io_num = -1,
     };
 
-    //Configuration for the SPI slave interface
-    spi_slave_interface_config_t slvcfg={
-        .mode=0,
-        .spics_io_num=GPIO_CS,
-        .queue_size=3,
-        .flags=0,
-        // .post_setup_cb=my_post_setup_cb,
-        // .post_trans_cb=my_post_trans_cb
-    };
+    // Configuration for the SPI slave interface
+    spi_slave_interface_config_t slvcfg = {
+        .mode = 0,
+        .spics_io_num = GPIO_CS,
+        .queue_size = 3,
+        .flags = 0,
+        .post_setup_cb = NULL,
+        .post_trans_cb = NULL};
 
-    //Configuration for the handshake line
-    // gpio_config_t io_conf={
-    //     .intr_type=GPIO_INTR_DISABLE,
-    //     .mode=GPIO_MODE_OUTPUT,
-    //     .pin_bit_mask=(1<<GPIO_HANDSHAKE)
-    // };
+    // Configuration for the handshake line
+    //  gpio_config_t io_conf={
+    //      .intr_type=GPIO_INTR_DISABLE,
+    //      .mode=GPIO_MODE_OUTPUT,
+    //      .pin_bit_mask=(1<<GPIO_HANDSHAKE)
+    //  };
 
-    //Configure handshake line as output
-    // gpio_config(&io_conf);
-    //Enable pull-ups on SPI lines so we don't detect rogue pulses when no master is connected.
+    // Configure handshake line as output
+    //  gpio_config(&io_conf);
+    // Enable pull-ups on SPI lines so we don't detect rogue pulses when no master is connected.
     gpio_set_pull_mode(GPIO_MOSI, GPIO_PULLUP_ONLY);
     gpio_set_pull_mode(GPIO_SCLK, GPIO_PULLUP_ONLY);
     gpio_set_pull_mode(GPIO_CS, GPIO_PULLUP_ONLY);
 
-    //Initialize SPI slave interface
-    ret=spi_slave_initialize(RCV_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
-    assert(ret==ESP_OK);
+    // Initialize SPI slave interface
+    // ret = spi_slave_initialize(RCV_HOST, &buscfg, &slvcfg, 1);
+    ret = spi_slave_initialize(RCV_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+    ESP_LOGE(TAG, "SPI SLAVE INIT. (%s)", esp_err_to_name(ret));
+    assert(ret == ESP_OK);
 
-    WORD_ALIGNED_ATTR char sendbuf[129]="";
-    WORD_ALIGNED_ATTR char recvbuf[129]="";
+    WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
+    WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
     memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
+    memset(recvbuf, 0x23, 129);
 
-    while(1) {
-        //Clear receive buffer, set send buffer to something sane
-        memset(recvbuf, 0xA5, 129);
-        sprintf(sendbuf, "This is from receiver, number %04d.", n);
+    while (1)
+    {
+        // Clear receive buffer, set send buffer to something sane
+        // memset(recvbuf, 0xA5, 129);
+        int res = sprintf(sendbuf, "Htis is from receiver, number %04d.", n);
+        //¶î´ý¶¨
+        if (res >= sizeof(sendbuf))
+        {
+            printf("Data truncated\n");
+        }
 
-        //Set up a transaction of 128 bytes to send/receive
-        t.length=128*8;
-        t.tx_buffer=sendbuf;
-        t.rx_buffer=recvbuf;
+        // Set up a transaction of 128 bytes to send/receive
+        t.length = 128 * 8;
+        t.tx_buffer = sendbuf;
+        t.rx_buffer = recvbuf;
         /* This call enables the SPI slave interface to send/receive to the sendbuf and recvbuf. The transaction is
         initialized by the SPI master, however, so it will not actually happen until the master starts a hardware transaction
         by pulling CS low and pulsing the clock etc. In this specific example, we use the handshake line, pulled up by the
         .post_setup_cb callback that is called as soon as a transaction is ready, to let the master know it is free to transfer
         data.
         */
-        //ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
-        ret=spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY); //   Equals  spi_device_queue_trans() + spi_device_get_trans_results  
-        //ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
+        // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
+        ret = spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY);
+        ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
+        // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
-        //spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
-        //received data from the master. Print it.
+        // esp_err_t ret;
+        // spi_slave_transaction_t *ret_trans;
+        // ToDo: check if any spi transfers in flight
+
+        // ret = spi_slave_queue_trans(RCV_HOST, &t, portMAX_DELAY);
+        // ESP_LOGE(TAG, "SPI_SLAVE_QUEUE_TRANS. (%s)", esp_err_to_name(ret));
+        // vTaskDelay(pdMS_TO_TICKS(100));
+        // ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, portMAX_DELAY);
+        // ESP_LOGE(TAG, "SPI_SLAVE_GET_TRANS_RESULT. (%s)", esp_err_to_name(ret));
+        // vTaskDelay(pdMS_TO_TICKS(100));
+        // assert(ret_trans == &t);
+        // return ESP_OK;
+
+        // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
+        // received data from the master. Print it.
         printf("Received: %s\n", recvbuf);
         n++;
-        //vTaskDelay(pdMS_TO_TICKS(2000));
-        if(n==2000){
-            printf("Already done : %d\n",n);
+        // vTaskDelay(pdMS_TO_TICKS(1000));
+        //  vTaskDelay(pdMS_TO_TICKS(2000));
+        if (n == 200)
+        {
+            printf("Already done : %d\n", n);
             break;
         }
     }
+}
 
+// Main application
+void app_main(void)
+{
+    xTaskCreate(spi_task, "spi_task", 2048, NULL, 12, NULL);
 }

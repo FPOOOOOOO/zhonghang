@@ -1,0 +1,311 @@
+menu "Example Configuration"
+
+    config EXAMPLE_USE_SPI_ETHERNET
+        bool
+
+    choice EXAMPLE_ETHERNET_TYPE
+        prompt "Ethernet Type"
+        default EXAMPLE_USE_INTERNAL_ETHERNET if IDF_TARGET_ESP32
+        default EXAMPLE_USE_W5500
+        help
+            Select which kind of Ethernet will be used in the example.
+
+        config EXAMPLE_USE_INTERNAL_ETHERNET
+            depends on IDF_TARGET_ESP32
+            select ETH_USE_ESP32_EMAC
+            bool "Internal EMAC"
+            help
+                Select internal Ethernet MAC controller.
+
+        config EXAMPLE_USE_DM9051
+            bool "DM9051 Module"
+            select EXAMPLE_USE_SPI_ETHERNET
+            select ETH_USE_SPI_ETHERNET
+            select ETH_SPI_ETHERNET_DM9051
+            help
+                Select external SPI-Ethernet module (DM9051).
+
+        config EXAMPLE_USE_W5500
+            bool "W5500 Module"
+            select EXAMPLE_USE_SPI_ETHERNET
+            select ETH_USE_SPI_ETHERNET
+            select ETH_SPI_ETHERNET_W5500
+            help
+                Select external SPI-Ethernet module (W5500).
+    endchoice # EXAMPLE_ETHERNET_TYPE
+
+    if EXAMPLE_USE_INTERNAL_ETHERNET
+        choice EXAMPLE_ETH_PHY_MODEL
+            prompt "Ethernet PHY Device"
+            default EXAMPLE_ETH_PHY_IP101
+            help
+                Select the Ethernet PHY device to use in the example.
+
+            config EXAMPLE_ETH_PHY_IP101
+                bool "IP101"
+                help
+                    IP101 is a single port 10/100 MII/RMII/TP/Fiber Fast Ethernet Transceiver.
+                    Goto http://www.icplus.com.tw/pp-IP101G.html for more information about it.
+
+            config EXAMPLE_ETH_PHY_RTL8201
+                bool "RTL8201/SR8201"
+                help
+                    RTL8201F/SR8201F is a single port 10/100Mb Ethernet Transceiver with auto MDIX.
+                    Goto http://www.corechip-sz.com/productsview.asp?id=22 for more information about it.
+
+            config EXAMPLE_ETH_PHY_LAN8720
+                bool "LAN8720"
+                help
+                    LAN8720A is a small footprint RMII 10/100 Ethernet Transceiver with HP Auto-MDIX Support.
+                    Goto https://www.microchip.com/LAN8720A for more information about it.
+
+            config EXAMPLE_ETH_PHY_DP83848
+                bool "DP83848"
+                help
+                    DP83848 is a single port 10/100Mb/s Ethernet Physical Layer Transceiver.
+                    Goto http://www.ti.com/product/DP83848J for more information about it.
+
+            config EXAMPLE_ETH_PHY_KSZ8041
+                bool "KSZ8041"
+                help
+                    The KSZ8041 is a single supply 10Base-T/100Base-TX Physical Layer Transceiver.
+                    Goto https://www.microchip.com/wwwproducts/en/KSZ8041 for more information about it.
+        endchoice # EXAMPLE_ETH_PHY_MODEL
+
+        config EXAMPLE_ETH_MDC_GPIO
+            int "SMI MDC GPIO number"
+            default 23
+            help
+                Set the GPIO number used by SMI MDC.
+
+        config EXAMPLE_ETH_MDIO_GPIO
+            int "SMI MDIO GPIO number"
+            default 18
+            help
+                Set the GPIO number used by SMI MDIO.
+    endif # EXAMPLE_USE_INTERNAL_ETHERNET
+
+    if EXAMPLE_USE_SPI_ETHERNET
+        config EXAMPLE_ETH_SPI_HOST
+            int "SPI Host Number"
+            range 0 2
+            default 1
+            help
+                Set the SPI host used to communicate with the SPI Ethernet Controller.
+
+        config EXAMPLE_ETH_SPI_SCLK_GPIO
+            int "SPI SCLK GPIO number"
+            range 0 33
+            default 20
+            help
+                Set the GPIO number used by SPI SCLK.
+
+        config EXAMPLE_ETH_SPI_MOSI_GPIO
+            int "SPI MOSI GPIO number"
+            range 0 33
+            default 19
+            help
+                Set the GPIO number used by SPI MOSI.
+
+        config EXAMPLE_ETH_SPI_MISO_GPIO
+            int "SPI MISO GPIO number"
+            range 0 33
+            default 18
+            help
+                Set the GPIO number used by SPI MISO.
+
+        config EXAMPLE_ETH_SPI_CS_GPIO
+            int "SPI CS GPIO number"
+            range 0 33
+            default 21
+            help
+                Set the GPIO number used by SPI CS.
+
+        config EXAMPLE_ETH_SPI_CLOCK_MHZ
+            int "SPI clock speed (MHz)"
+            range 5 80
+            default 36
+            help
+                Set the clock speed (MHz) of SPI interface.
+
+        config EXAMPLE_ETH_SPI_INT_GPIO
+            int "Interrupt GPIO number"
+            default 4
+            help
+                Set the GPIO number used by the SPI Ethernet module interrupt line.
+    endif # EXAMPLE_USE_SPI_ETHERNET
+
+    config EXAMPLE_ETH_PHY_RST_GPIO
+        int "PHY Reset GPIO number"
+        default 5
+        help
+            Set the GPIO number used to reset PHY chip.
+            Set to -1 to disable PHY chip hardware reset.
+
+    config EXAMPLE_ETH_PHY_ADDR
+        int "PHY Address"
+        range 0 31
+        default 1
+        help
+            Set PHY address according your board schematic.
+
+
+    choice EXAMPLE_WIFI_MODE
+        prompt "Wifi Type"
+        config EXAMPLE_WIFI_AP
+            bool "AP_mode"
+            
+        config EXAMPLE_WIFI_STA
+            bool "STA_mode"
+        
+        config EXAMPLE_WIFI_APSTA
+            bool "APSTA_mode"
+    endchoice
+
+
+    if EXAMPLE_WIFI_AP
+        config EXAMPLE_WIFI_CHANNEL
+            int "WiFi channel"
+            range 1 13
+            default 1
+            help
+                Set the channel of Wi-Fi ap.
+
+        config EXAMPLE_MAX_STA_CONN
+            int "Maximum STA connections"
+            default 4
+            help
+                Maximum number of the station that allowed to connect to current Wi-Fi hotspot.
+        
+        config EXAMPLE_WIFI_SSID
+            string "Wi-Fi SSID"
+            default "eth2sta"
+            help
+                Set the SSID of Wi-Fi ap interface.
+
+        config EXAMPLE_WIFI_PASSWORD
+            string "Wi-Fi Password"
+            default "12345678"
+            help
+                Set the password of Wi-Fi ap interface.
+    endif
+    
+    if EXAMPLE_WIFI_STA
+        config EXAMPLE_WIFI_SSID
+            string "Wi-Fi SSID"
+            default "eth2sta"
+            help
+                Set the SSID of Wi-Fi ap interface.
+
+        config EXAMPLE_WIFI_PASSWORD
+            string "Wi-Fi Password"
+            default "12345678"
+            help
+            Set the password of Wi-Fi ap interface.
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+    endif
+
+    if EXAMPLE_WIFI_APSTA
+        config EXAMPLE_WIFI_STA_SSID
+            string "Wi-Fi STA SSID"
+            default "node2ap"
+
+        config EXAMPLE_WIFI_AP_SSID
+            string "Wi-Fi AP SSID"
+            default "node2sta"
+
+        config EXAMPLE_WIFI_STA_PASSWORD
+            string "Wi-Fi STA Password"
+            default "12345678"
+        
+        config EXAMPLE_WIFI_AP_PASSWORD
+            string "Wi-Fi AP Password"
+            default "12345678"
+        
+        config EXAMPLE_WIFI_CHANNEL
+            int "WiFi channel"
+            range 1 13
+            default 1
+            help
+                Set the channel of Wi-Fi ap.
+
+        config EXAMPLE_MAX_STA_CONN
+            int "Maximum STA connections"
+            default 4
+            help
+                Maximum number of the station that allowed to connect to current Wi-Fi hotspot.
+
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+    endif
+
+    choice EXAMPLE_IP_MODE
+        prompt "IP Version"
+                depends on EXAMPLE_SOCKET_IP_INPUT_STRING
+                help
+                    Example can use either IPV4 or IPV6.
+        
+                config EXAMPLE_IPV4
+                    bool "IPV4"
+        
+                config EXAMPLE_IPV6
+                    bool "IPV6"
+                    select EXAMPLE_CONNECT_IPV6
+        
+    endchoice
+    
+    config EXAMPLE_IPV4_ADDR
+        string "IPV4 Address"
+        default "192.168.0.165"
+        depends on EXAMPLE_IPV4
+        help
+            IPV4 address to which the client example will send data.
+
+    config EXAMPLE_IPV6_ADDR
+        string "IPV6 Address"
+        default "FE80::30AD:E57B:C212:68AD"
+        depends on EXAMPLE_IPV6
+        help
+            IPV6 address to which the client example will send data.
+
+    config EXAMPLE_PORT1
+        int "Port1"
+        range 0 65535
+        default 3335
+        help
+            The remote port to which the client example will send data.
+    
+    config EXAMPLE_PORT2
+        int "Port2"
+        range 0 65535
+        default 3336
+        help
+            The remote port to which the client example will send data.
+
+    config EXAMPLE_PORT3
+        int "Port3"
+        range 0 65535
+        default 3337
+        help
+            The remote port to which the client example will send data.
+
+    choice EXAMPLE_SOCKET_IP_INPUT
+        prompt "Socket example source"
+        default EXAMPLE_SOCKET_IP_INPUT_STRING
+        help
+            Selects the input source of the IP used in the example.
+
+        config EXAMPLE_SOCKET_IP_INPUT_STRING
+            bool "From string"
+
+        config EXAMPLE_SOCKET_IP_INPUT_STDIN
+            bool "From stdin"
+    endchoice
+endmenu

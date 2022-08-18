@@ -33,7 +33,6 @@
 #include "driver/gpio.h"
 #include "esp_intr_alloc.h"
 
-
 /*
 SPI sender (master) example.
 
@@ -46,16 +45,15 @@ ready to receive/send data. This code connects this line to a GPIO interrupt whi
 task waits for this semaphore to be given before queueing a transmission.
 */
 
-
 /*
 Pins in use. The SPI Master can use the GPIO mux, so feel free to change these if needed.
 */
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-#define GPIO_HANDSHAKE 0 //2default added
-#define GPIO_MOSI 13     //12
-#define GPIO_MISO 12     //13
-#define GPIO_SCLK 14     //15
-#define GPIO_CS 15       //14
+#define GPIO_HANDSHAKE 0 // 2default added
+#define GPIO_MOSI 13     // 12
+#define GPIO_MISO 12     // 13
+#define GPIO_SCLK 14     // 15
+#define GPIO_CS 15       // 14
 
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define GPIO_HANDSHAKE 3
@@ -64,8 +62,7 @@ Pins in use. The SPI Master can use the GPIO mux, so feel free to change these i
 #define GPIO_SCLK 6
 #define GPIO_CS 10
 
-#endif //CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-
+#endif // CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
 
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define SENDER_HOST HSPI_HOST
@@ -78,8 +75,7 @@ Pins in use. The SPI Master can use the GPIO mux, so feel free to change these i
 
 #endif
 
-
-//The semaphore indicating the slave is ready to receive stuff.
+// The semaphore indicating the slave is ready to receive stuff.
 static xQueueHandle rdySem;
 
 /*
@@ -101,106 +97,114 @@ This ISR is called when the handshake line goes high.
 //     if (mustYield) portYIELD_FROM_ISR();
 // }
 
-void pre_cb(transaction_cb_t *trans) {
-    BaseType_t mustYield=true;
-    //xSemaphoreGiveFromISR(rdySem, &mustYield);
+void pre_cb(transaction_cb_t *trans)
+{
+    BaseType_t mustYield = true;
+    // xSemaphoreGiveFromISR(rdySem, &mustYield);
 }
 
-void post_cb(transaction_cb_t *trans) {
-    BaseType_t mustYield=false;
-    //xSemaphoreGiveFromISR(rdySem, &mustYield);
+void post_cb(transaction_cb_t *trans)
+{
+    BaseType_t mustYield = false;
+    // xSemaphoreGiveFromISR(rdySem, &mustYield);
 }
 
-//Main application
+// Main application
 void app_main(void)
 {
     esp_err_t ret;
     spi_device_handle_t handle;
 
-    //Configuration for the SPI bus
-    spi_bus_config_t buscfg={
-        .mosi_io_num=GPIO_MOSI,
-        .miso_io_num=GPIO_MISO,
-        .sclk_io_num=GPIO_SCLK,
-        .flags=SPICOMMON_BUSFLAG_IOMUX_PINS, //added IOMUX
-        .quadwp_io_num=-1,  //added -1 default
-        .quadhd_io_num=-1   //
+    // Configuration for the SPI bus
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = GPIO_MOSI,
+        .miso_io_num = GPIO_MISO,
+        .sclk_io_num = GPIO_SCLK,
+        .flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
+        .quadwp_io_num = -1,                   // added -1 default
+        .quadhd_io_num = -1                    //
     };
-     printf("buscfg¡®s flag is::: %u\n",buscfg.flags);
-    //Configuration for the SPI device on the other side of the bus
-    spi_device_interface_config_t devcfg={
-        .command_bits=0,
-        .address_bits=0,
-        .dummy_bits=0,
-        .clock_speed_hz=8000000,    //5000000 at initial added
-        .duty_cycle_pos=128,        //50% duty cycle
-        .mode=0,
+    printf("buscfg¡®s flag is::: %u\n", buscfg.flags);
+    // Configuration for the SPI device on the other side of the bus
+    spi_device_interface_config_t devcfg = {
+        .command_bits = 0,
+        .address_bits = 0,
+        .dummy_bits = 0,
+        .clock_speed_hz = 4000000, // 5000000 at initial added
+        .duty_cycle_pos = 128,     // 50% duty cycle
+        .mode = 0,
         //.input_delay_ns=1,          //default null,added
-        .spics_io_num=GPIO_CS,
-        .cs_ena_posttrans=3,        //Keep the CS low 3 cycles after transaction, to stop slave from missing the last bit when CS has less propagation delay than CLK
-        .queue_size=3,               //3 defalut added
-        .pre_cb=pre_cb,
-        .post_cb=post_cb
-    };
+        .spics_io_num = GPIO_CS,
+        .cs_ena_posttrans = 3, // Keep the CS low 3 cycles after transaction, to stop slave from missing the last bit when CS has less propagation delay than CLK
+        .queue_size = 3,       // 3 defalut added
+        .pre_cb = pre_cb,
+        .post_cb = post_cb};
 
-    //GPIO config for the handshake line.
-    // gpio_config_t io_conf={
-    //     .intr_type=GPIO_INTR_POSEDGE,
-    //     .mode=GPIO_MODE_INPUT,
-    //     .pull_up_en=1,
-    //     .pin_bit_mask=(1<<GPIO_HANDSHAKE)
-    // };
+    // GPIO config for the handshake line.
+    //  gpio_config_t io_conf={
+    //      .intr_type=GPIO_INTR_POSEDGE,
+    //      .mode=GPIO_MODE_INPUT,
+    //      .pull_up_en=1,
+    //      .pin_bit_mask=(1<<GPIO_HANDSHAKE)
+    //  };
 
-    int n=0;
+    int n = 0;
     char sendbuf[128] = {0};
     char recvbuf[128] = {0};
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
 
-    //Create the semaphore.
-    rdySem=xSemaphoreCreateBinary();
+    // Create the semaphore.
+    rdySem = xSemaphoreCreateBinary();
 
-    //Set up handshake line interrupt.
-    // gpio_config(&io_conf);
-    // gpio_install_isr_service(0);
-    // gpio_set_intr_type(GPIO_HANDSHAKE, GPIO_INTR_POSEDGE);
-    // gpio_isr_handler_add(GPIO_HANDSHAKE, gpio_handshake_isr_handler, NULL);
+    // Set up handshake line interrupt.
+    //  gpio_config(&io_conf);
+    //  gpio_install_isr_service(0);
+    //  gpio_set_intr_type(GPIO_HANDSHAKE, GPIO_INTR_POSEDGE);
+    //  gpio_isr_handler_add(GPIO_HANDSHAKE, gpio_handshake_isr_handler, NULL);
 
-    //Initialize the SPI bus and add the device we want to send stuff to.
-    ret=spi_bus_initialize(SENDER_HOST, &buscfg, SPI_DMA_CH_AUTO);
-    assert(ret==ESP_OK);
-    ret=spi_bus_add_device(SENDER_HOST, &devcfg, &handle);
-    assert(ret==ESP_OK);
+    // Initialize the SPI bus and add the device we want to send stuff to.
+    ret = spi_bus_initialize(SENDER_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    assert(ret == ESP_OK);
+    ret = spi_bus_add_device(SENDER_HOST, &devcfg, &handle);
+    assert(ret == ESP_OK);
 
-    //Assume the slave is ready for the first transmission: if the slave started up before us, we will not detect
-    //positive edge on the handshake line.
+    // Assume the slave is ready for the first transmission: if the slave started up before us, we will not detect
+    // positive edge on the handshake line.
     xSemaphoreGive(rdySem);
 
-    while(1) {
+    while (1)
+    {
+        memset(recvbuf, 0xB5, 128);
+
+        // int res = snprintf(sendbuf, sizeof(sendbuf),
+        //         "Sender, transmission no. %04i. Last time, I received: \"%s\"", n, recvbuf);
         int res = snprintf(sendbuf, sizeof(sendbuf),
-                "Sender, transmission no. %04i. Last time, I received: \"%s\"", n, recvbuf);
-        if (res >= sizeof(sendbuf)) {
+                           "Sender, transmission no. %04i", n);
+        printf("Res Length is %d\n", res);
+        if (res >= sizeof(sendbuf))
+        {
             printf("Data truncated\n");
         }
-        t.length=sizeof(sendbuf)*8;
-        t.tx_buffer=sendbuf;
-        t.rx_buffer=recvbuf;
-        //Wait for slave to be ready for next byte before sending
-        //xSemaphoreTake(rdySem, portMAX_DELAY); //Wait until slave is ready
-        ret=spi_device_transmit(handle, &t);//   Equals spi_device_get_trans_results  +  spi_device_queue_trans()
-        //ret = spi_device_queue_trans(handle, t, portMAX_DELAY);
-        //if (ret != ESP_OK) return ret;
+        t.length = sizeof(sendbuf) * 8;
+        t.tx_buffer = sendbuf;
+        t.rx_buffer = recvbuf;
+        // Wait for slave to be ready for next byte before sending
+        // xSemaphoreTake(rdySem, portMAX_DELAY); //Wait until slave is ready
+        ret = spi_device_transmit(handle, &t); //   Equals spi_device_get_trans_results  +  spi_device_queue_trans()
+        // ret = spi_device_queue_trans(handle, t, portMAX_DELAY);
+        // if (ret != ESP_OK) return ret;
         printf("Received: %s\n", recvbuf);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1000));
         n++;
-        // if(n==100){
-        //     printf("Already done : %d\n",n);
-        //     break;
-        // }
+        if (n == 100)
+        {
+            printf("Already done : %d\n", n);
+            break;
+        }
     }
 
-    //Never reached.
-    ret=spi_bus_remove_device(handle);
-    assert(ret==ESP_OK);
+    // Never reached.
+    ret = spi_bus_remove_device(handle);
+    assert(ret == ESP_OK);
 }
- 

@@ -13,6 +13,11 @@
 #include "freertos/queue.h"
 #include "driver/uart.h"
 #include "esp_log.h"
+//#include "/Users/fpo/esp/esp-idf/components/hal/include/hal/gpio_types.h"
+
+#include "driver/gpio.h"
+#include "driver/timer.h"
+#include "esp_timer.h"
 
 static const char *TAG = "uart_events";
 
@@ -32,9 +37,15 @@ static const char *TAG = "uart_events";
 #define EX_UART_NUM UART_NUM_0
 #define PATTERN_CHR_NUM    (3)         /*!< Set the number of consecutive and identical characters received by receiver which defines a UART pattern*/
 
+//added
+#define TXD1_PIN (GPIO_NUM_33) //串口1的发送数据引脚
+#define RXD1_PIN (GPIO_NUM_35) //串口1的接收数据引脚
+
+
 #define BUF_SIZE (1024)
 #define RD_BUF_SIZE (BUF_SIZE)
 static QueueHandle_t uart0_queue;
+static QueueHandle_t uart1_queue;
 
 static void uart_event_task(void *pvParameters)
 {
@@ -64,7 +75,7 @@ static void uart_event_task(void *pvParameters)
                     // The ISR has already reset the rx FIFO,
                     // As an example, we directly flush the rx buffer here in order to read more data.
                     uart_flush_input(EX_UART_NUM);
-                    xQueueReset(uart0_queue);
+                    xQueueReset(uart1_queue);
                     break;
                 //Event of UART ring buffer full
                 case UART_BUFFER_FULL:
@@ -72,7 +83,7 @@ static void uart_event_task(void *pvParameters)
                     // If buffer full happened, you should consider encreasing your buffer size
                     // As an example, we directly flush the rx buffer here in order to read more data.
                     uart_flush_input(EX_UART_NUM);
-                    xQueueReset(uart0_queue);
+                    xQueueReset(uart1_queue);
                     break;
                 //Event of UART RX break detected
                 case UART_BREAK:
@@ -117,6 +128,15 @@ static void uart_event_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+static void hb_task(void *args)
+{
+    for (;;)
+    {
+        vTaskDelay(4000 / portTICK_PERIOD_MS);
+        ESP_LOGE(TAG, "ETHECHO");
+    }
+}
+
 void app_main(void)
 {
     esp_log_level_set(TAG, ESP_LOG_INFO);
@@ -139,6 +159,7 @@ void app_main(void)
     esp_log_level_set(TAG, ESP_LOG_INFO);
     //Set UART pins (using UART0 default pins ie no changes.)
     uart_set_pin(EX_UART_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    //uart_set_pin(EX_UART_NUM, TXD1_PIN, RXD1_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 
     //Set uart pattern detect function.
     uart_enable_pattern_det_baud_intr(EX_UART_NUM, '+', PATTERN_CHR_NUM, 9, 0, 0);
@@ -146,5 +167,8 @@ void app_main(void)
     uart_pattern_queue_reset(EX_UART_NUM, 20);
 
     //Create a task to handler UART event from ISR
+    xTaskCreate(hb_task, "hb_task", 2048, NULL, 10, NULL);
     xTaskCreate(uart_event_task, "uart_event_task", 2048, NULL, 12, NULL);
+
+
 }

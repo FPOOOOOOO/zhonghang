@@ -80,10 +80,9 @@ void app_main(void)
     // Create default event loop that running in background
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
-
     esp_netif_t *eth_netif = esp_netif_new(&cfg);
     // Set default handlers to process TCP/IP stuffs
-    ESP_ERROR_CHECK(esp_eth_set_default_handlers(eth_netif));
+    // ESP_ERROR_CHECK(esp_eth_set_default_handlers(eth_netif));
 
     //----------------------------------//
     // char* ip= "10.13.21.17";
@@ -193,7 +192,7 @@ void app_main(void)
     }));
 #endif
     /* attach Ethernet driver to TCP/IP stack */
-    ESP_ERROR_CHECK(esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle)));
+    //ESP_ERROR_CHECK(esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle)));
     /* start Ethernet driver state machine */
     ESP_ERROR_CHECK(esp_eth_start(eth_handle));
 }
