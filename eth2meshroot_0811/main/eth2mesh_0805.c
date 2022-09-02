@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // 0805: combine eth2ap into this
+// 0827: 规范了N&R发送形式
 
 #include "mdf_common.h"
 #include "mwifi.h"
@@ -146,8 +147,8 @@ static void uart_handle_task(void *arg)
         char *recv_data = cJSON_PrintUnformatted(json_data);
 
         size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-        //ret = mwifi_root_write(dest_addr,1, &data_type, jsonstring, size, true);
+        //ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
+        ret = mwifi_root_write(Multiaddr,1, &data_type, jsonstring, size, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
     FREE_MEM:

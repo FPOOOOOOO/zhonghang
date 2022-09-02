@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // 0805: combine eth2ap into this
+// 0827: 规范了N&R发送形式
 
 #include "mdf_common.h"
 #include "mwifi.h"
@@ -310,7 +311,7 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    res = mwifi_write(parent_bssid.addr, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
                     //res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
                     
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
