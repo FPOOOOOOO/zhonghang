@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>baidumap.html</file>
+        <file>baidumaponline0620.html</file>
+        <file>bmap-offline/baidumapoffline0624.html</file>
+    </qresource>
+</RCC>

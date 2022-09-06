@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+		<!--body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}-->
+		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
+		#allmap{height:600px;width:100%;}
+		#r-result{width:100%;}
+	</style>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=Vt0PeUiy7bBnizkzOaSochkF2YoMTn6D"></script>
+	<title>test</title>
+</head>
+ 
+<body>
+	<div id="allmap"></div>
+</body>
+ 
+</html>
+
+<script type="text/javascript">
+	// 百度地图API功能
+	var map = new BMap.Map("allmap",{minZoom:8,maxZoom:100}); // 创建Map实例,设置地图允许的最小/大级别
+	var point = new BMap.Point(120.131654, 30.26904);
+//	var point = new BMap.Point(121, 31);
+	map.centerAndZoom('杭州市', 12);
+	map.enableScrollWheelZoom(true);//开启滚轮放大缩小
+	
+	function addpoint(lon,lat) {
+	    var marker = new BMap.Marker(new BMap.Point(lon, lat));
+	    map.addOverlay(marker);
+	}
+ 
+    function movepoint(lon, lat)
+    {
+        var mpoint = new BMap.Point(lon, lat);
+        var zoom = map.getZoom();
+        var maker = new BMap.Marker(mpoint);
+        map.centerAndZoom(mpoint, 100);
+        map.addOverlay(maker);
+    }
+
+</script>
