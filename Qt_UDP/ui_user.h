@@ -85,6 +85,8 @@ public:
     QCheckBox *s15;
     QCheckBox *s11;
     QCheckBox *s1;
+    QComboBox *NetGate;
+    QLabel *label_26;
     QLabel *label_18;
     QPushButton *comm_bt;
     QPushButton *ETHtest;
@@ -246,7 +248,7 @@ public:
         label_24->setWordWrap(false);
         ETH_bt = new QPushButton(groupBox_3);
         ETH_bt->setObjectName(QString::fromUtf8("ETH_bt"));
-        ETH_bt->setGeometry(QRect(440, 120, 83, 32));
+        ETH_bt->setGeometry(QRect(420, 70, 83, 32));
         label_27 = new QLabel(groupBox_3);
         label_27->setObjectName(QString::fromUtf8("label_27"));
         label_27->setGeometry(QRect(10, 120, 41, 16));
@@ -356,6 +358,14 @@ public:
         s1->setGeometry(QRect(50, 110, 31, 18));
         s1->setCheckable(true);
         s1->setChecked(false);
+        NetGate = new QComboBox(groupBox_3);
+        NetGate->setObjectName(QString::fromUtf8("NetGate"));
+        NetGate->setGeometry(QRect(370, 110, 161, 22));
+        label_26 = new QLabel(groupBox_3);
+        label_26->setObjectName(QString::fromUtf8("label_26"));
+        label_26->setGeometry(QRect(420, 140, 51, 16));
+        label_26->setFont(font);
+        label_26->setWordWrap(false);
         label_18 = new QLabel(user);
         label_18->setObjectName(QString::fromUtf8("label_18"));
         label_18->setGeometry(QRect(390, 10, 121, 31));
@@ -469,6 +479,7 @@ public:
         s15->setText(QCoreApplication::translate("user", "15", nullptr));
         s11->setText(QCoreApplication::translate("user", "11", nullptr));
         s1->setText(QCoreApplication::translate("user", "1", nullptr));
+        label_26->setText(QCoreApplication::translate("user", "\351\200\211\346\213\251\347\275\221\345\217\243", nullptr));
         label_18->setText(QCoreApplication::translate("user", "\350\212\202\347\202\271\350\256\276\347\275\256", nullptr));
         comm_bt->setText(QCoreApplication::translate("user", "\347\234\213\346\235\277", nullptr));
         ETHtest->setText(QCoreApplication::translate("user", "ETHtest", nullptr));

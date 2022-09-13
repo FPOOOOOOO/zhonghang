@@ -14,6 +14,32 @@ user::user(QWidget *parent) :
 {
     ui->setupUi(this);
     udpSocket = new QUdpSocket(this);
+    //界面初始化 显示网口
+    //Obtain NetGate
+    pcap_if_t *allDevs;
+    pcap_if_t *temp;
+    int i=0;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    /* Retrieve the device list */
+    if(pcap_findalldevs(&allDevs, errbuf) == -1){
+
+        qDebug() << "error:" << errbuf;
+    }
+
+    /* Print the list */
+    for(temp=allDevs; temp; temp=temp->next)
+    {
+        printf("%d. %s",++i,(temp->name));
+        if (temp->description){
+            printf(" (%s)\n",(temp->description));
+            ui->NetGate->addItem(temp->description);
+        }
+        else
+            printf("(No description available)\n");
+
+    }
+
+    pcap_freealldevs(allDevs);
 }
 
 user::~user()
@@ -32,7 +58,7 @@ void user::on_comm_bt_clicked()
 
 void user::on_ETH_bt_clicked()
 {
-    printf("I am IN NO1 bt");
+//    printf("I am IN NO1 bt");
 //    this->close();
 //    Comm *comm1=new Comm();
 //    comm1->show();
@@ -52,14 +78,20 @@ void user::on_ETH_bt_clicked()
     for(temp=allDevs; temp; temp=temp->next)
     {
         printf("%d. %s",++i,(temp->name));
-        if (temp->description)
+        if (temp->description){
             printf(" (%s)\n",(temp->description));
+            if(!QString::compare(temp->description,ui->NetGate->currentText(),Qt::CaseInsensitive)){
+                devName=temp->name;
+            }
+        }
         else
             printf("(No description available)\n");
+
     }
 
-    devName = allDevs->name;
-    printf("NetGateName is:  %s",devName.toStdString().c_str());
+    printf("Choose: %s \n",(ui->NetGate->currentText()).toStdString().c_str());
+    //devName = allDevs->next->name;
+    printf("NetGateName is:  %s\n",devName.toStdString().c_str());
 
     pcap_freealldevs(allDevs);
 
@@ -97,7 +129,7 @@ void user::on_ETH_bt_clicked()
         qDebug() << "send error:" << pcap_geterr(fp);
     }
 
-    pcap_sendpacket(fp, packet, 100);
+    //pcap_sendpacket(fp, packet, 100);
 
     qDebug() << "over";
 }
@@ -116,9 +148,4 @@ void user::on_ETHtest_clicked()
 
     ui->plainTextEdit->appendPlainText(buf);
     UDPrecv=buf;
-}
-
-void user::on_UDPOpen_clicked()
-{
-
 }

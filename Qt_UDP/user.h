@@ -22,6 +22,7 @@ public:
     ~user();
 
     QUdpSocket *udpSocket;
+    //Global
     static QString UDPrecv;
 
 private slots:
