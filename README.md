@@ -77,5 +77,19 @@ I (19271) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1
 
 ## <span id = "5">0917</span>
 1、包长增加——在增益好的情况下，还是通不过 \
-- 把增益减小:
+- 把WiFi发射增益减小，10dB，15dB:
 2、楼里测距——完成了，天线的增益和匹配问题
+
+## <span id = "6">0919</span>
+1、跳过认证阶段测速—— 先用自带的iperf测试，和2.4G进行比较\
+2、用了新天线，改到20dB \
+3、saving new calibration data because of checksum failure, mode(0) 、\
+4、←?I (16388) wifi:bcn_timout,ap_probe_send_start \
+5、没有进行DHCP的分发
+
+## <span id = "7">0920</span>
+1、跳过认证阶段测速—— 先用自带的iperf测试，和2.4G进行比较\
+2、用了新天线，改到20dB \
+3、saving new calibration data because of checksum failure, mode(0) 、\
+4、←?I (16388) wifi:bcn_timout,ap_probe_send_start \
+5、没有进行DHCP的分发
