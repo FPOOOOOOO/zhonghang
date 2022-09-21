@@ -88,8 +88,8 @@ I (19271) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1
 5、没有进行DHCP的分发
 
 ## <span id = "7">0920</span>
-1、跳过认证阶段测速—— 先用自带的iperf测试，和2.4G进行比较\
-2、用了新天线，改到20dB \
-3、saving new calibration data because of checksum failure, mode(0) 、\
-4、←?I (16388) wifi:bcn_timout,ap_probe_send_start \
-5、没有进行DHCP的分发
+1、换了天线以后，进行了距离的测试\
+
+## <span id = "8">0921</span>
+1、妈的数据丢了，进行一个图的绘制 ——linux可以用red
+2、
