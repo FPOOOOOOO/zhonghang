@@ -35,7 +35,7 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 uint8_t Multiaddr[6] = {0};
-
+WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 typedef struct
 {
@@ -147,8 +147,8 @@ static void uart_handle_task(void *arg)
         char *recv_data = cJSON_PrintUnformatted(json_data);
 
         size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        //ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-        ret = mwifi_root_write(Multiaddr,1, &data_type, jsonstring, size, true);
+        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
+        ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
     FREE_MEM:
@@ -188,7 +188,7 @@ static void node_read_task(void *arg)
          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
          */
         ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-        //ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
@@ -293,9 +293,9 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    //res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
-                    //res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
-                    res = mwifi_root_write(Multiaddr,1, &data_type, msg.packet, msg.length, true);
+                    // res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
+                    // res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -433,10 +433,11 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
         MDF_LOGI("Child is connected on ap interface");
         node_child_connected = true;
         esp_wifi_ap_get_sta_list(&wifi_sta_list);
+        break;
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        // node_child_connected = true;
+        //node_child_connected = true;
 
     default:
         break;
@@ -463,6 +464,39 @@ static esp_err_t initialize_flow_control(void)
     //      return ESP_FAIL;
     //  }
     return ESP_OK;
+}
+
+static void hb_task(void *args)
+{
+    int n = 0;
+    // Configure a temporary buffer for the incoming data
+    uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
+    size_t size = MWIFI_PAYLOAD_LEN;
+    //char *jsonstring = "ROOTHB";
+    uint8_t dest_addr[MWIFI_ADDR_LEN] = {0};
+    mwifi_data_type_t data_type = {0};
+    //uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
+    flow_control_msg_t msg;
+    //esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
+
+    for (;;)
+    {
+        data_type.group = true;
+        sprintf(test14G, "ROOTHB number %04d.", n);
+        msg.packet=test14G;
+        msg.length=sizeof(test14G);
+        // uint8_t fuck =mwifi_is_started();
+        // MDF_LOGI("½øÀ´ %d",fuck);
+        if (mwifi_is_started()&&node_child_connected)
+        {
+            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+            MDF_LOGI("%d",n);
+            // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+        }
+   
+        vTaskDelay(1000 / portTICK_RATE_MS);
+        n++;
+    }
 }
 
 void app_main()
@@ -512,8 +546,9 @@ void app_main()
     MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
                                            sizeof(group_id_list) / sizeof(group_id_list[0])));
 
-    for(int i=0;i<6;i++){
-        Multiaddr[i]=group_id_list[0][i];
+    for (int i = 0; i < 6; i++)
+    {
+        Multiaddr[i] = group_id_list[0][i];
     }
 
     /**
@@ -537,4 +572,6 @@ void app_main()
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+
+    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }
