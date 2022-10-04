@@ -418,13 +418,13 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to eth */
-        // if (s_ethernet_is_connected)
-        // {
-        //     if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
-        //     {
-        //         ESP_LOGE(TAG, "Ethernet send packet failed");
-        //     }
-        // }
+        if (s_ethernet_is_connected)
+        {
+            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Ethernet send packet failed");
+            }
+        }
 
         /* forwoad to uart */
         uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
@@ -763,8 +763,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    // ESP_ERROR_CHECK(initialize_flow_control());
-    // MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
