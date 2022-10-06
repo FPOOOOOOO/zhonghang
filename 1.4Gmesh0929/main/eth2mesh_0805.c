@@ -420,17 +420,17 @@ static void node_read_task(void *arg)
         /* forwoad to eth */
         if (s_ethernet_is_connected)
         {
-            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
+            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
 
         /* forwoad to uart */
-        uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
         MDF_LOGI("parent rssi: %d",mwifi_get_parent_rssi());
         //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     FREE_MEM:
         MDF_FREE(buffer);
     }

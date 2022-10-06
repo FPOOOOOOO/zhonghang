@@ -139,3 +139,9 @@ I (19271) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1
 
 ## <span id = "16">1002</span>
 1、由于RSSI不知道为什么2米降到了-60，所以要以PING包作为测试基准，将mesh加上ETH透传，再比较直连ETH透传。——1.4Gmesh（root）0929 \
+
+## <span id = "17">1006</span>
+1、1.4G mesh（root）0929 里的Multi Addr是自己也会收一份下来    \
+2、esp.emac: no mem for receive buffer \
+3、找到原因了，不能自己收一份，要单独除了Root以外做一个组播，取消往串口传送能减少延时。\
+4、TODO mesh ETH透传测速、测衰减
