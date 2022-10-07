@@ -145,3 +145,7 @@ I (19271) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1
 2、esp.emac: no mem for receive buffer \
 3、找到原因了，不能自己收一份，要单独除了Root以外做一个组播，取消往串口传送能减少延时。\
 4、TODO mesh ETH透传测速、测衰减
+
+## <span id = "18">1007</span>
+1、1.4G的mesh长包丢包率很高、1.4G的直连 基本ping不通\
+2、我们明天做直接实际的通信实验看下，一是串口gps数据通信， 二是spi数据通信。我带台笔记本过来\
