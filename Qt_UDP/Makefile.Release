@@ -1208,28 +1208,6 @@ release\comm.obj: comm.cpp comm.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qvector2d.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtouchdevice.h \
 		ui_comm.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QFrame \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGridLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgridlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QHBoxLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
 		welcome.h \
 		user.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QUdpSocket \
@@ -1253,6 +1231,7 @@ release\comm.obj: comm.cpp comm.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\qnetworkrequest.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QSharedDataPointer \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QUrl \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVector \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QObject \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QSslConfiguration \
@@ -1427,40 +1406,15 @@ release\map.obj: map.cpp map.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpagelayout.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpagesize.h \
 		ui_map.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGroupBox \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgroupbox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QHBoxLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgridlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPlainTextEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qplaintextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qtextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractscrollarea.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextdocument.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextcursor.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextformat.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qabstracttextdocumentlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qglyphrun.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qrawfont.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qfontdatabase.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
-		comm.h
+		comm.h \
+		user.h \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QUdpSocket \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\qudpsocket.h \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\qhostaddress.h \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QMessageBox \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qmessagebox.h \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdialog.h \
+		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QHostAddress
 
 release\topo.obj: topo.cpp topo.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QWidget \
@@ -1573,21 +1527,6 @@ release\topo.obj: topo.cpp topo.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpen.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\QPen \
 		ui_topo.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
 		comm.h
 
 release\user.obj: user.cpp user.h \
@@ -1707,60 +1646,6 @@ release\user.obj: user.cpp user.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdialog.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QHostAddress \
 		ui_user.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QCheckBox \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qcheckbox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QComboBox \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qcombobox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractitemdelegate.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qstyleoption.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractspinbox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qvalidator.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qregularexpression.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qslider.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractslider.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qstyle.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qtabbar.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qtabwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qrubberband.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qabstractitemmodel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGroupBox \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgroupbox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QHBoxLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgridlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLineEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlineedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextcursor.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextformat.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpen.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextoption.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPlainTextEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qplaintextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qtextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractscrollarea.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextdocument.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qabstracttextdocumentlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qglyphrun.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qrawfont.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qfontdatabase.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
 		comm.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QDebug \
 		..\..\WpdPack_4_1_2\WpdPack\Include\pcap.h \
@@ -1878,34 +1763,6 @@ release\welcome.obj: welcome.cpp welcome.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qvector2d.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtouchdevice.h \
 		ui_welcome.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGridLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgridlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QHBoxLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLineEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlineedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextcursor.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextformat.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpen.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextoption.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QSpacerItem \
 		user.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QUdpSocket \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\qudpsocket.h \
@@ -2036,48 +1893,7 @@ release\widget.obj: widget.cpp widget.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qmessagebox.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdialog.h \
 		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtNetwork\QHostAddress \
-		ui_widget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\QVariant \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QApplication \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qcoreapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtCore\qeventloop.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qguiapplication.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qinputmethod.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGridLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgridlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QGroupBox \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qgroupbox.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qframe.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QHBoxLayout \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLabel \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlabel.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QLineEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qlineedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextcursor.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextformat.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qpen.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextoption.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPlainTextEdit \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qplaintextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qtextedit.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractscrollarea.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextdocument.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qabstracttextdocumentlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qtextlayout.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qglyphrun.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qrawfont.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qfontdatabase.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QPushButton \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qpushbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtGui\qicon.h \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QSpacerItem \
-		D:\Qt\Qt15.4.2\5.14.2\msvc2017_64\include\QtWidgets\QVBoxLayout
+		ui_widget.h
 
 release\qrc_BAIDUMAP.obj: release\qrc_BAIDUMAP.cpp 
 
