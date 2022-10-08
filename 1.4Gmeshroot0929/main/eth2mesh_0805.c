@@ -255,7 +255,8 @@ void SetFreq(uint32_t F)
 static mdf_err_t uart_initialize()
 {
     uart_config_t uart_config = {
-        .baud_rate = CONFIG_UART_BAUD_RATE,
+        //.baud_rate = CONFIG_UART_BAUD_RATE,
+        .baud_rate = 9600,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -303,65 +304,72 @@ static void uart_handle_task(void *arg)
         }
 
         ESP_LOGI("UART Recv data:", "%s", data);
+        //这里开始改为串口透传
+        data_type.group=true;
+        //串口透传结束
+        //这里开始是原来的选择性传送
+        // json_root = cJSON_Parse((char *)data);
+        // MDF_ERROR_CONTINUE(!json_root, "cJSON_Parse, data format error, data: %s", data);
 
-        json_root = cJSON_Parse((char *)data);
-        MDF_ERROR_CONTINUE(!json_root, "cJSON_Parse, data format error, data: %s", data);
+        // /**
+        //  * @brief Check if it is a group address. If it is a group address, data_type.group = true.
+        //  */
+        // json_addr = cJSON_GetObjectItem(json_root, "dest_addr");
+        // json_group = cJSON_GetObjectItem(json_root, "group");
 
-        /**
-         * @brief Check if it is a group address. If it is a group address, data_type.group = true.
-         */
-        json_addr = cJSON_GetObjectItem(json_root, "dest_addr");
-        json_group = cJSON_GetObjectItem(json_root, "group");
+        // if (json_addr)
+        // {
+        //     data_type.group = false;
+        //     json_dest_addr = json_addr;
+        // }
+        // else if (json_group)
+        // {
+        //     data_type.group = true;
+        //     json_dest_addr = json_group;
+        // }
+        // else
+        // {
+        //     MDF_LOGW("Address not found");
+        //     cJSON_Delete(json_root);
+        //     continue;
+        // }
 
-        if (json_addr)
-        {
-            data_type.group = false;
-            json_dest_addr = json_addr;
-        }
-        else if (json_group)
-        {
-            data_type.group = true;
-            json_dest_addr = json_group;
-        }
-        else
-        {
-            MDF_LOGW("Address not found");
-            cJSON_Delete(json_root);
-            continue;
-        }
+        // /**
+        //  * @brief  Convert mac from string format to binary
+        //  */
+        // do
+        // {
+        //     uint32_t mac_data[MWIFI_ADDR_LEN] = {0};
+        //     sscanf(json_dest_addr->valuestring, MACSTR,
+        //            mac_data, mac_data + 1, mac_data + 2,
+        //            mac_data + 3, mac_data + 4, mac_data + 5);
 
-        /**
-         * @brief  Convert mac from string format to binary
-         */
-        do
-        {
-            uint32_t mac_data[MWIFI_ADDR_LEN] = {0};
-            sscanf(json_dest_addr->valuestring, MACSTR,
-                   mac_data, mac_data + 1, mac_data + 2,
-                   mac_data + 3, mac_data + 4, mac_data + 5);
+        //     for (int i = 0; i < MWIFI_ADDR_LEN; i++)
+        //     {
+        //         dest_addr[i] = mac_data[i];
+        //         ESP_LOGI(" ", "%x", Multiaddr[i]);
+        //     }
+        // } while (0);
+        // json_data = cJSON_GetObjectItem(json_root, "data");
+        // char *recv_data = cJSON_PrintUnformatted(json_data);
 
-            for (int i = 0; i < MWIFI_ADDR_LEN; i++)
-            {
-                dest_addr[i] = mac_data[i];
-                ESP_LOGI(" ", "%x", Multiaddr[i]);
-            }
-        } while (0);
-        json_data = cJSON_GetObjectItem(json_root, "data");
-        char *recv_data = cJSON_PrintUnformatted(json_data);
+   
 
-        size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
+        //size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
         // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-        ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
+        //ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
+        //这里开始是原来的选择性传送结束
+        ret = mwifi_root_write(Multiaddr, 1, &data_type, data, recv_length, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-    FREE_MEM:
-        MDF_FREE(recv_data);
-        MDF_FREE(jsonstring);
-        cJSON_Delete(json_root);
+//    FREE_MEM:
+        //MDF_FREE(recv_data);
+        //MDF_FREE(jsonstring);
+        //cJSON_Delete(json_root);
     }
 
     MDF_LOGI("Uart handle task is exit");
-
+FREE_MEM:
     MDF_FREE(data);
     vTaskDelete(NULL);
 }
@@ -420,8 +428,8 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to uart */
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     FREE_MEM:
         MDF_FREE(buffer);
     }
@@ -709,7 +717,7 @@ static void hb_task(void *args)
         // MDF_LOGI("进来 %d",fuck);
         if (mwifi_is_started() && node_child_connected)
         {
-            //mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
             MDF_LOGI("%d", n);
             // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
@@ -761,8 +769,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));

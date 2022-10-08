@@ -149,3 +149,23 @@ I (19271) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1
 ## <span id = "18">1007</span>
 1、1.4G的mesh长包丢包率很高、1.4G的直连 基本ping不通\
 2、我们明天做直接实际的通信实验看下，一是串口gps数据通信， 二是spi数据通信。我带台笔记本过来\
+
+## <span id = "18">1008</span>
+1、QT 不是user的成员，先把QTUDP下面的moc_user.cpp删掉，clean-qmake-build，后续如果出现了LNK2019的问题，那就[点这里](https://blog.csdn.net/shinefriend/article/details/109405042?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109405042-blog-108044482.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109405042-blog-108044482.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=1) ，现在可以在小WIN上开发了\
+2、GPS模块的波特率是9600，数据格式如下  \
+~~~
+$GNRMC,000223.000,V,3905.845246,
+N,11721.051131,E,0.000,0.000,,,E
+,N*2B
+$GNGGA,000223.000,3905.845246,N,11721.051131,E,0,00,127.0
+00,-61.479,M,0,M,,*7F
+$GNGLL,39
+05.845246,N,11721.051131,E,00022
+3.000,V,N*59
+$GNGSA,A,1,,,,,,,,,,,,,127.000,127.000,127.000*2A
+
+$GNGSA,A,1,,,,,,,,,,,,,127.000,
+127.000,127.000*2A
+~~~
+\
+3、明天测一下串口透传先
