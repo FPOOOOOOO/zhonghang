@@ -388,6 +388,8 @@ static void node_read_task(void *arg)
     uint8_t *buffer = NULL;
     size_t buffer_len = 0;
 
+    int recv_count = 0;
+
     // char *RSSI = "-120";
     // uint8_t RSSILEN = 8;
 
@@ -433,8 +435,11 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to uart */
+        recv_count+=1;
         uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        MDF_LOGI("parent rssi: %d",mwifi_get_parent_rssi());
+        if(buffer_len>60){
+            MDF_LOGI("len: %d rssi: %d count: %d",buffer_len,mwifi_get_parent_rssi(),recv_count);
+        }
         //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
         uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     FREE_MEM:
@@ -804,5 +809,5 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 }

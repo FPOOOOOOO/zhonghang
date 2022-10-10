@@ -91,7 +91,7 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 uint8_t Multiaddr[6] = {0};
-WORD_ALIGNED_ATTR char test14G[77] = "hihu";
+WORD_ALIGNED_ATTR char test14G[1000] = "hihu";
 
 static xQueueHandle gpio_evt_queue = NULL;
 uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
@@ -428,8 +428,8 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to uart */
-        uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     FREE_MEM:
         MDF_FREE(buffer);
     }
@@ -710,7 +710,7 @@ static void hb_task(void *args)
     for (;;)
     {
         data_type.group = true;
-        sprintf(test14G, "ROOTHB number %04d.", n);
+        sprintf(test14G, "ROOTHB number %04d", n);
         msg.packet = test14G;
         msg.length = sizeof(test14G);
         // uint8_t fuck =mwifi_is_started();
@@ -718,7 +718,7 @@ static void hb_task(void *args)
         if (mwifi_is_started() && node_child_connected)
         {
             mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
-            MDF_LOGI("%d", n);
+            MDF_LOGI("LEN:%d,Num:%d",msg.length,n);
             // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
 
@@ -813,7 +813,7 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }
