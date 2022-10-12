@@ -261,7 +261,7 @@ static mdf_err_t uart_initialize()
 {
     uart_config_t uart_config = {
         //.baud_rate = CONFIG_UART_BAUD_RATE,
-        .baud_rate = 9600,
+        .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -389,6 +389,7 @@ static void node_read_task(void *arg)
     size_t buffer_len = 0;
 
     int recv_count = 0;
+    uint8_t HBheader[4];
 
     // char *RSSI = "-120";
     // uint8_t RSSILEN = 8;
@@ -436,12 +437,19 @@ static void node_read_task(void *arg)
 
         /* forwoad to uart */
         recv_count+=1;
-        uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        if(buffer_len>60){
-            MDF_LOGI("len: %d rssi: %d count: %d",buffer_len,mwifi_get_parent_rssi(),recv_count);
+        HBheader[0]=buffer[0];
+        HBheader[1]=buffer[1];
+        HBheader[2]=buffer[2];
+        HBheader[3]=buffer[3];
+        //memcpy(HBheader,buffer,4);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        //&&(recv_count%100==0)
+        if(buffer_len>20){
+            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
         }
         //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        
     FREE_MEM:
         MDF_FREE(buffer);
     }

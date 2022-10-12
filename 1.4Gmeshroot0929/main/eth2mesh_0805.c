@@ -710,7 +710,7 @@ static void hb_task(void *args)
     for (;;)
     {
         data_type.group = true;
-        sprintf(test14G, "ROOTHB number %04d", n);
+        sprintf(test14G, "%04d ROOTHB number", n);
         msg.packet = test14G;
         msg.length = sizeof(test14G);
         // uint8_t fuck =mwifi_is_started();
@@ -718,11 +718,11 @@ static void hb_task(void *args)
         if (mwifi_is_started() && node_child_connected)
         {
             mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
-            MDF_LOGI("LEN:%d,Num:%d",msg.length,n);
+            //MDF_LOGI("LEN:%d,Num:%d",msg.length,n);
             // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
 
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(100 / portTICK_RATE_MS);
         n++;
     }
 }
