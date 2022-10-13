@@ -389,7 +389,7 @@ static void node_read_task(void *arg)
     size_t buffer_len = 0;
 
     int recv_count = 0;
-    uint8_t HBheader[4];
+    uint8_t HBheader[6];
 
     // char *RSSI = "-120";
     // uint8_t RSSILEN = 8;
@@ -441,10 +441,12 @@ static void node_read_task(void *arg)
         HBheader[1]=buffer[1];
         HBheader[2]=buffer[2];
         HBheader[3]=buffer[3];
+        HBheader[4]=buffer[4];
+        HBheader[5]=buffer[5];
         //memcpy(HBheader,buffer,4);
         //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
         //&&(recv_count%100==0)
-        if(buffer_len>20){
+        if(buffer_len>20&&(recv_count%10==0)){
             MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
             //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
         }
