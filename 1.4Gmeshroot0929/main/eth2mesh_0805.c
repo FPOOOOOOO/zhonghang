@@ -718,13 +718,12 @@ static void hb_task(void *args)
         // MDF_LOGI("½øÀ´ %d",fuck);
         if (mwifi_is_started() && node_child_connected)
         {
-            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, false);
+            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
             //MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
     // FREE_MEM:
     //     continue;
-
-        vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelay(10 / portTICK_RATE_MS);
         n++;
     }
 }
