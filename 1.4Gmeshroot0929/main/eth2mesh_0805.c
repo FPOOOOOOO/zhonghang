@@ -770,8 +770,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    //ESP_ERROR_CHECK(initialize_flow_control());
-    //MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
@@ -816,5 +816,5 @@ void app_main()
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
-    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    //xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }
