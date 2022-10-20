@@ -436,20 +436,20 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to uart */
-        // recv_count+=1;
-        // HBheader[0]=buffer[0];
-        // HBheader[1]=buffer[1];
-        // HBheader[2]=buffer[2];
-        // HBheader[3]=buffer[3];
-        // HBheader[4]=buffer[4];
-        // HBheader[5]=buffer[5];
-        // //memcpy(HBheader,buffer,4);
-        // //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        // //&&(recv_count%100==0)
-        // if(buffer_len>20&&(recv_count%10==0)){
-        //     MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
-        //     //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
-        // }
+        recv_count+=1;
+        HBheader[0]=buffer[0];
+        HBheader[1]=buffer[1];
+        HBheader[2]=buffer[2];
+        HBheader[3]=buffer[3];
+        HBheader[4]=buffer[4];
+        HBheader[5]=buffer[5];
+        //memcpy(HBheader,buffer,4);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        //&&(recv_count%100==0)
+        if(buffer_len>20&&(recv_count%10==0)){
+            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        }
         //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
         
     FREE_MEM:
@@ -784,8 +784,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
