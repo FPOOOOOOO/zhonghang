@@ -427,13 +427,13 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to eth */
-        if (s_ethernet_is_connected)
-        {
-            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-            {
-                ESP_LOGE(TAG, "Ethernet send packet failed");
-            }
-        }
+        // if (s_ethernet_is_connected)
+        // {
+        //     if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+        //     {
+        //         ESP_LOGE(TAG, "Ethernet send packet failed");
+        //     }
+        // }
 
         /* forwoad to uart */
         recv_count+=1;

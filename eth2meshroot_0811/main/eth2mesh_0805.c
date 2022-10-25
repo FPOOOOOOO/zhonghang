@@ -193,17 +193,17 @@ static void node_read_task(void *arg)
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         /* forwoad to eth */
-        // if (s_ethernet_is_connected)
-        // {
-        //     if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
-        //     {
-        //         ESP_LOGE(TAG, "Ethernet send packet failed");
-        //     }
-        // }
+        if (s_ethernet_is_connected)
+        {
+            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Ethernet send packet failed");
+            }
+        }
 
         /* forwoad to uart */
-        uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     }
 
     MDF_LOGW("Node read task is exit");
@@ -530,8 +530,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    // ESP_ERROR_CHECK(initialize_flow_control());
-    // MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
