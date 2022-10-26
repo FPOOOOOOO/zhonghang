@@ -13,6 +13,8 @@
 // limitations under the License.
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
+// 0929: 从eth2mesh0805里加了1.4G
+// 1025: 改成了Br9177
 
 #include "mdf_common.h"
 #include "mwifi.h"
@@ -62,17 +64,27 @@
 #define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
 #define ESP_INTR_FLAG_DEFAULT 0
 
-#define ADF_CE_Set (gpio_set_level(GPIO_OUTPUT_IO_0, 1))
-#define ADF_CE_Clr (gpio_set_level(GPIO_OUTPUT_IO_0, 0))
+#define BR_CE_Set (gpio_set_level(GPIO_OUTPUT_IO_0, 1))
+#define BR_CE_Clr (gpio_set_level(GPIO_OUTPUT_IO_0, 0))
 
-#define ADF_LE_Set (gpio_set_level(GPIO_OUTPUT_IO_1, 1))
-#define ADF_LE_Clr (gpio_set_level(GPIO_OUTPUT_IO_1, 0))
+#define BR_LE_Set (gpio_set_level(GPIO_OUTPUT_IO_1, 1))
+#define BR_LE_Clr (gpio_set_level(GPIO_OUTPUT_IO_1, 0))
 
-#define ADF_DATA_Set (gpio_set_level(GPIO_OUTPUT_IO_2, 1))
-#define ADF_DATA_Clr (gpio_set_level(GPIO_OUTPUT_IO_2, 0))
+#define BR_DATA_Set (gpio_set_level(GPIO_OUTPUT_IO_2, 1))
+#define BR_DATA_Clr (gpio_set_level(GPIO_OUTPUT_IO_2, 0))
 
-#define ADF_CLK_Set (gpio_set_level(GPIO_OUTPUT_IO_3, 1))
-#define ADF_CLK_Clr (gpio_set_level(GPIO_OUTPUT_IO_3, 0))
+#define BR_CLK_Set (gpio_set_level(GPIO_OUTPUT_IO_3, 1))
+#define BR_CLK_Clr (gpio_set_level(GPIO_OUTPUT_IO_3, 0))
+
+static xQueueHandle gpio_evt_queue = NULL;
+// uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
+//                     // 注：输入频率的单位为MHz，R的范围为0~1023的整数
+//                     // 默认输入频率为板载25M晶振，故得R为125。
+//                     // 板载40M晶振，则R=200
+// uint32_t F = 38000; // 350 初始频率35MHz
+uint16_t F = 160; // 120——1500M 112——1400M 104——1300M（25M晶振
+                  // 250 2.5G 200 2G 300 1.5G 220 1.1G 240 0.6G  160 3.2G（20M晶振
+                  // 100 1G  150  1.5G  100 2G （40M晶振
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -90,15 +102,10 @@ wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
-uint8_t Multiaddr[6] = {0};
-WORD_ALIGNED_ATTR char test14G[1000] = "hihu";
-
-static xQueueHandle gpio_evt_queue = NULL;
-uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
-                    // 注：输入频率的单位为MHz，R的范围为0~1023的整数
-                    // 默认输入频率为板载25M晶振，故得R为125。
-                    // 板载40M晶振，则R=200
-uint32_t F = 38000; // 350 初始频率35MHz
+static bool g_root_got_ip = false;
+const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+                                     {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+uint8_t Rootaddr[6] = {0xFF,0x0,0x0,0x1,0x0,0x0};
 
 typedef struct
 {
@@ -108,6 +115,7 @@ typedef struct
 
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
+
 
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {
@@ -177,77 +185,221 @@ static void GPIO_INIT(void)
     printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
 }
 
-//-----------------------------------------------------------------
-//函数名称:void ADF4351_Wdata(uint32_t dat)
-//函数功能:ADF4351写数据
-//入口参数:无
-//出口参数:无
-//-----------------------------------------------------------------
 
-void ADF4351_Wdata(uint32_t dat)
+void BR9177_Wdata(uint32_t dat)
 {
     uint8_t i;
-    ADF_CLK_Clr;
-    ADF_LE_Clr; //让32位移位寄存器准备接受下一次数据
+    BR_LE_Clr; //让32位移位寄存器准备接受下一次数据
+    usleep(15);
     for (i = 0; i < 32; i++)
     {
         if (dat & 0x80000000)
-            ADF_DATA_Set;
+            BR_DATA_Set;
         else
-            ADF_DATA_Clr;
+            BR_DATA_Clr;
+
+        BR_CLK_Clr; //上升沿采样
+        usleep(15);
         dat <<= 1;
-        ADF_CLK_Set;
-        ADF_CLK_Clr; //数据在CLK上升沿时逐个输入32位移位寄存器
+        BR_CLK_Set;
+        usleep(15);
+
+        // BR_CLK_Set; //下降沿采样
+        // usleep(15);
+        // dat <<= 1;
+        // BR_CLK_Clr;
+        // usleep(15);
     }
-    ADF_LE_Set; //打高使得32位移位寄存器按?的寄存器地址进行写入
+    BR_CLK_Clr; //上升沿采样
+    // BR_CLK_Set;//下降沿采样
+    usleep(15);
+    BR_LE_Set; //打高使得32位移位寄存器按?的寄存器地址进行写入
 }
 
-//-----------------------------------------------------------------
-//函数名称:void ADF4351_Init(uint32_t date)
-//函数功能:ADF4351初始化
-//入口参数:无
-//出口参数:无
-//-----------------------------------------------------------------
-
-void ADF4351_Init(uint32_t date)
+void SetFreq(uint16_t F)
 {
-    ADF_CE_Set;
-    usleep(5);
-    // Delay_1us (5);
-    // vTaskDelay(pdMS_TO_TICKS(1000));
-    // portTICK_PERIOD_MS
-    ADF_CLK_Clr;
-    ADF_LE_Set;
-    ADF_DATA_Clr;
-    ADF4351_Wdata(0x00580005);              // 设置寄存器5 ：LD设置为数字锁定监测模式
-    ADF4351_Wdata(0x0060a43c);              // 设置寄存器4 : 差分输出功率设置为5dbm，使能静音至检测到锁定，频段选择时钟设为10K
-    ADF4351_Wdata(0x006004b3);              // 设置寄存器3	：charge cancellation，ABP设为1
-    ADF4351_Wdata(0x0D003Fc2 | R << 14);    // 设置寄存器2：电荷泵电流设为5mA，LDP,LDF设为1。
-    ADF4351_Wdata(0x08008011);              //	设置寄存器1 ：预分配器设为8/9
-    ADF4351_Wdata(0x00000000 | date << 15); // N分配器数据写入寄存器R0
-}
+    // uint16_t INT=500;
+    // ESP_LOGI(TAG, "I am here 3 to SetFreq");
+    // if(499<F && F<801){
+    //     INT=F*4/10;
+    // }else if(899<F && F <1601){
+    //     INT=F*2/10;
+    // }else if(1699<F && F<3201){
+    //     INT=F/10;
+    // }
+    // uint32_t reg5=0xa000000a;
+    // uint32_t reg4=0x86200000 | ((FREF_DIV<<7)&0x1FFF80) | VCO_DIV ;
+    // uint32_t reg3=0x6075c800 | (VCO<<24)
 
-void SetFreq(uint32_t F)
-{
-    ESP_LOGI(TAG, "I am here3");
-    if (F >= 690 && F <= 1370)
-        ADF4351_Wdata(0x0050443c); // if,else if中得语句是判断此时频率得范围
-    else if (F > 1370 && F <= 2740)
-        ADF4351_Wdata(0x0040443c); // 根据频率的范围确定我们要更新此时寄存器4（RF diver）的值
-    else if (F > 2740 && F <= 5490)
-        ADF4351_Wdata(0x0030143c);
-    else if (F > 5490 && F <= 10990)
-        ADF4351_Wdata(0x0020143c);
-    else if (F > 10990 && F <= 21990)
-        ADF4351_Wdata(0x0010143c);
-    else if (F > 21990)
-        ADF4351_Wdata(0x0000143c);
-    else
-        ADF4351_Wdata(0x0060443c);
+    // //543210 
+    if (F == 200)
+    {                             // 20M 2G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200101); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 0110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 300)
+    {                             // 20M 1.5G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200102); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6175c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 220)
+    {                             // 20M 1.1G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200102); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 240)
+    {                             // 20M 0.6G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200104); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6175c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 250)
+    {                             // 20M 2.5G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200101); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6175c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    // else if (F == 160)
+    // {                             // 25M 2G
+    //     BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+    //     usleep(1000);
+    //     BR9177_Wdata(0x86200101); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+    //     usleep(1000);
+    //     BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+    //     usleep(1000);
+    //     BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+    //     usleep(1000);
+    //     BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+    //     usleep(1000);
+    //     BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+    //     usleep(1000);
+    // }
+    // else if (F == 100)
+    // {                             // 40M 2G
+    //     BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+    //     usleep(1000);
+    //     BR9177_Wdata(0x86200101); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+    //     usleep(1000);
+    //     BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+    //     usleep(1000);
+    //     BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+    //     usleep(1000);
+    //     BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+    //     usleep(1000);
+    //     BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+    //     usleep(1000);
+    // }
+    else if (F == 150)
+    {                             // 40M 1.5G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200102); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6175c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 100)
+    {                             // 40M 1G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200102); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
+    else if (F == 40)
+    {                             // 50M 1G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x86200102); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6075c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }    else if (F == 160)
+    {                             // 20M 3.2G
+        BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
+        usleep(1000);
+        BR9177_Wdata(0x8e200081); // 设置寄存器4 : R预分频=1 RF分频器=2 低功率  1000 1110 0010 0000 0000 0000 1000 0010
+        usleep(1000);
+        BR9177_Wdata(0x6175c800); // 设置寄存器3	：高频段VCO 默认             0110 0001 0111 0101 1100 1000 0
+        usleep(1000);
+        BR9177_Wdata(0x43000000); // 设置寄存器2：MUXOUT:默认 低相噪 默认       0100 0011 0000
+        usleep(1000);
+        BR9177_Wdata(0x29000000); //	设置寄存器1 ：预分频器设为4/5 + FRAC 0    0010 1001 0
+        usleep(1000);
+        BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
+        usleep(1000);
+    }
 
-    ADF4351_Wdata(0x00000000 | F << 15); // 把要输出频率的字写入寄存器0，改变输出频率
     ESP_LOGI(TAG, "Now Frequency is %d M:", F);
 }
+
 
 /**
  * @brief uart initialization
@@ -256,7 +408,7 @@ static mdf_err_t uart_initialize()
 {
     uart_config_t uart_config = {
         //.baud_rate = CONFIG_UART_BAUD_RATE,
-        .baud_rate = 9600,
+        .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -347,25 +499,23 @@ static void uart_handle_task(void *arg)
         //     for (int i = 0; i < MWIFI_ADDR_LEN; i++)
         //     {
         //         dest_addr[i] = mac_data[i];
-        //         ESP_LOGI(" ", "%x", Multiaddr[i]);
         //     }
         // } while (0);
+
         // json_data = cJSON_GetObjectItem(json_root, "data");
         // char *recv_data = cJSON_PrintUnformatted(json_data);
 
-   
-
-        //size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-        //ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
+        // size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
+        // ret = mwifi_write(Rootaddr, &data_type, jsonstring, size, true);
+        //ret = mwifi_write(NULL, &data_type, jsonstring, size, true);
         //这里开始是原来的选择性传送结束
-        ret = mwifi_root_write(Multiaddr, 1, &data_type, data, recv_length, true);
+        ret = mwifi_write(Rootaddr, &data_type, data, recv_length, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-//    FREE_MEM:
-        //MDF_FREE(recv_data);
-        //MDF_FREE(jsonstring);
-        //cJSON_Delete(json_root);
+    // FREE_MEM:
+    //     MDF_FREE(recv_data);
+    //     MDF_FREE(jsonstring);
+    //     cJSON_Delete(json_root);
     }
 
     MDF_LOGI("Uart handle task is exit");
@@ -385,6 +535,12 @@ static void node_read_task(void *arg)
     uint8_t *buffer = NULL;
     size_t buffer_len = 0;
 
+    int recv_count = 0;
+    uint8_t HBheader[6];
+
+    // char *RSSI = "-120";
+    // uint8_t RSSILEN = 8;
+
     MDF_LOGI("Node read task is running");
 
     for (;;)
@@ -402,7 +558,10 @@ static void node_read_task(void *arg)
          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
          */
         ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-        // ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        //ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        // ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
+        // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
+        // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
         {
@@ -414,22 +573,32 @@ static void node_read_task(void *arg)
             goto FREE_MEM;
         }
 
-        // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-        // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-        // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
-
         /* forwoad to eth */
-        if (s_ethernet_is_connected)
-        {
-            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-            {
-                ESP_LOGE(TAG, "Ethernet send packet failed");
-            }
-        }
+        // if (s_ethernet_is_connected)
+        // {
+        //     if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+        //     {
+        //         ESP_LOGE(TAG, "Ethernet send packet failed");
+        //     }
+        // }
 
         /* forwoad to uart */
+        recv_count+=1;
+        HBheader[0]=buffer[0];
+        HBheader[1]=buffer[1];
+        HBheader[2]=buffer[2];
+        HBheader[3]=buffer[3];
+        HBheader[4]=buffer[4];
+        HBheader[5]=buffer[5];
+        //memcpy(HBheader,buffer,4);
         //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        //&&(recv_count%100==0)
+        if(buffer_len>20&&(recv_count%10==0)){
+            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        }
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
+        
     FREE_MEM:
         MDF_FREE(buffer);
     }
@@ -509,7 +678,7 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = true;
+    data_type.group = false;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -521,9 +690,9 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    // res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
-                    // res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
-                    res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
+                    //res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
+                    
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -567,6 +736,32 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
     case ETHERNET_EVENT_STOP:
         ESP_LOGI(TAG, "Ethernet Stopped");
         break;
+
+    default:
+        break;
+    }
+}
+
+/** Event handler for IP_EVENT_ETH_GOT_IP */
+static void ip_event_handler(void *arg, esp_event_base_t event_base,
+                             int32_t event_id, void *event_data)
+{
+    switch (event_id)
+    {
+    case IP_EVENT_ETH_GOT_IP:
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        const esp_netif_ip_info_t *ip_info = &event->ip_info;
+
+        MDF_LOGI("Ethernet Got IP Address");
+        MDF_LOGI("ETHIP:" IPSTR, IP2STR(&ip_info->ip));
+        MDF_LOGI("ETHMASK:" IPSTR, IP2STR(&ip_info->netmask));
+        MDF_LOGI("ETHGW:" IPSTR, IP2STR(&ip_info->gw));
+
+        mdf_event_loop_send(MDF_EVENT_MWIFI_ROOT_GOT_IP, NULL);
+        g_root_got_ip = true;
+        break;
+    }
 
     default:
         break;
@@ -665,7 +860,7 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        // node_child_connected = true;
+        // node_child_connected = false;
 
     default:
         break;
@@ -685,54 +880,21 @@ static esp_err_t initialize_flow_control(void)
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
-    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, (tskIDLE_PRIORITY + 2), NULL);
-    //  if (ret != pdTRUE)
-    //  {
-    //      ESP_LOGE(TAG, "create flow control task failed");
-    //      return ESP_FAIL;
-    //  }
+    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+    // if (ret != pdTRUE)
+    // {
+    //     ESP_LOGE(TAG, "create flow control task failed");
+    //     return ESP_FAIL;
+    // }
     return ESP_OK;
-}
-
-static void hb_task(void *args)
-{
-    int n = 0;
-    // Configure a temporary buffer for the incoming data
-    uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
-    size_t size = MWIFI_PAYLOAD_LEN;
-    // char *jsonstring = "ROOTHB";
-    uint8_t dest_addr[MWIFI_ADDR_LEN] = {0};
-    mwifi_data_type_t data_type = {0};
-    // uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
-    flow_control_msg_t msg;
-    mdf_err_t ret = MDF_OK;
-    // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
-
-    for (;;)
-    {
-        data_type.group = true;
-        sprintf(test14G, "%06d ROOTHB number", n);
-        msg.packet = test14G;
-        msg.length = sizeof(test14G);
-        // uint8_t fuck =mwifi_is_started();
-        // MDF_LOGI("进来 %d",fuck);
-        if (mwifi_is_started() && node_child_connected)
-        {
-            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
-            //MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
-        }
-    // FREE_MEM:
-    //     continue;
-        vTaskDelay(10 / portTICK_RATE_MS);
-        n++;
-    }
 }
 
 void app_main()
 {
     mwifi_init_config_t cfg = MWIFI_INIT_CONFIG_DEFAULT();
     mwifi_config_t config = {
-        .channel = CONFIG_MESH_CHANNEL,
+        //CONFIG_MESH_CHANNEL
+        .channel = 1,
         .mesh_id = CONFIG_MESH_ID,
         .mesh_type = CONFIG_DEVICE_TYPE,
     };
@@ -759,13 +921,23 @@ void app_main()
 
     GPIO_INIT();
     ESP_LOGI(TAG, "I am here1");
-    ADF4351_Init(F);
+    // BR4351_Init(F);
     ESP_LOGI(TAG, "I am here2");
-    int cnt = 0;
-    SetFreq(F);
-    SetFreq(F);
-    SetFreq(F);
+    BR_CE_Set;
+    usleep(1000);
 
+    BR_LE_Set;  //先保证CS片选拉高
+    BR_CLK_Clr; //先保证时钟拉低（上升沿采样
+    // BR_CLK_Set;//先保证时钟拉高（下降沿采样
+    BR_DATA_Clr;
+
+    int cnt = 0;
+    usleep(1000);
+    ESP_LOGI(TAG, "Start Set Freq:");
+
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
     ESP_LOGI(TAG, "Freq set.");
 
     MDF_ERROR_ASSERT(esp_netif_init());
@@ -781,18 +953,9 @@ void app_main()
      * @brief select/extend a group memebership here
      *      group id can be a custom address
      */
-    const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                       {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-    //为了不组播自己
-    const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xad},
-                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
-                                           sizeof(group_id_list) / sizeof(group_id_list[0])));
 
-    for (int i = 0; i < 6; i++)
-    {
-        Multiaddr[i] = group_id_list[0][i];
-    }
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+                                           sizeof(group_id_list) / sizeof(group_id_list[0])));
 
     /**
      * @brief Data transfer between wifi mesh devices
@@ -801,7 +964,7 @@ void app_main()
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
-    //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+    //             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     /* Periodic print system information */
     // TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
@@ -815,6 +978,4 @@ void app_main()
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
-
-    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

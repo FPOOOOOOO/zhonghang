@@ -256,4 +256,27 @@ ping 192.168.4.88 -i 0.2 | while read pong; do echo "$(date): $pong"; done
 7¡¢Ò»´Î·¢ËÍ1000Byte£¬delay10us£¬9000 000Hz£¬ÀíÂÛÄÜ¹»´ïµ½ÂÔĞ¡ÓÚ9Mbit/s£¬Êµ²â: 8.28Mbit/s    \
 
 ## <span id = "24">1025</span>
-1¡¢
+1¡¢ĞÂµÄESP32Ğ¾Æ¬£º
+~~~
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
+
+[12:04:3:724]Rx¡û?invalid header: 0xffffffff
+
+[12:04:3:769]Rx¡û?invalid header: 0xffffffff   
+~~~
+2¡¢Packet content transfer stopped (received 8 bytes) \
+3¡¢ 4¡¢5ºÅ°å1.4Gmesh 4351 1000¸ö°ü£¬20.09Ãë\
+4¡¢ Ö±½Ó¿ØÖÆ·¢ËÍ½ÓÊÕµçÂ·£¨¹¦·Å£©£¬Õ¤Ñ¹¿ÉÄÜÌ«µÍ£¿\
+5¡¢ 9177°å×Ó2.4GÄÜÍ¨£¬µ«ÊÇĞÅºÅºÜµÍ£¬Ö»ÓĞ84; 800M ²»Í¨£¬N°åCS0¶ÔµØ¶ÌÂ·\
+6¡¢
+~~~
+Parent is disconnected, reason: 201[
+~~~
+[´íÎó´úÂëcsdn](https://blog.csdn.net/Marchtwentytwo/article/details/118551075)  \   
+[´íÎó´úÂëespressif](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/api-guides/wifi.html#wi-fi-reason-code)\
+
+7¡¢¹¦·ÅÒ»Ö±¿ªºÃÁ¬½Ó£¨4-5£©£¬¹¦·ÅÓĞÑ¡ÔñµÄ¿ª¹Ø£¨3-5£©²»ºÃÁ¬¡£\
+8¡¢£¨4-5£©ÓĞbug
+~~~
+[16:46:2:199]Rx¡û?W (24395) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:9, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:0
+~~~
