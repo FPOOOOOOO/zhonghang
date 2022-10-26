@@ -256,7 +256,7 @@ static mdf_err_t uart_initialize()
 {
     uart_config_t uart_config = {
         //.baud_rate = CONFIG_UART_BAUD_RATE,
-        .baud_rate = 9600,
+        .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -305,7 +305,7 @@ static void uart_handle_task(void *arg)
 
         ESP_LOGI("UART Recv data:", "%s", data);
         //这里开始改为串口透传
-        data_type.group=true;
+        data_type.group = true;
         //串口透传结束
         //这里开始是原来的选择性传送
         // json_root = cJSON_Parse((char *)data);
@@ -353,19 +353,17 @@ static void uart_handle_task(void *arg)
         // json_data = cJSON_GetObjectItem(json_root, "data");
         // char *recv_data = cJSON_PrintUnformatted(json_data);
 
-   
-
-        //size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-        //ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
+        // size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
+        //  ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
+        // ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
         //这里开始是原来的选择性传送结束
         ret = mwifi_root_write(Multiaddr, 1, &data_type, data, recv_length, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-//    FREE_MEM:
-        //MDF_FREE(recv_data);
-        //MDF_FREE(jsonstring);
-        //cJSON_Delete(json_root);
+        //    FREE_MEM:
+        // MDF_FREE(recv_data);
+        // MDF_FREE(jsonstring);
+        // cJSON_Delete(json_root);
     }
 
     MDF_LOGI("Uart handle task is exit");
@@ -401,37 +399,38 @@ static void node_read_task(void *arg)
         /**
          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
          */
-        ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-        // ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        // ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
 
-        if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
-        {
-            continue;
-        }
-        else if (ret != MDF_OK)
-        {
-            MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
-            goto FREE_MEM;
-        }
+        // if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
+        // {
+        //     continue;
+        // }
+        // else if (ret != MDF_OK)
+        // {
+        //     MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
+        //     goto FREE_MEM;
+        // }
 
         // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-        // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
+
+        ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         /* forwoad to eth */
         if (s_ethernet_is_connected)
         {
-            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
 
         /* forwoad to uart */
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
-    FREE_MEM:
-        MDF_FREE(buffer);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        // FREE_MEM:
+        //     MDF_FREE(buffer);
     }
 
     MDF_LOGW("Node read task is exit");
@@ -590,15 +589,17 @@ static mdf_err_t eth_init()
     mac_config.smi_mdc_gpio_num = CONFIG_EXAMPLE_ETH_MDC_GPIO;
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
-#if CONFIG_EXAMPLE_ETH_PHY_IP101
-    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
-    esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
-    esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_DP83848
-    esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
-#endif
+    #if CONFIG_EXAMPLE_ETH_PHY_IP101
+        esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    #elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
+        esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+    #elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
+        esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
+    #elif CONFIG_EXAMPLE_ETH_PHY_DP83848
+        esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
+    #endif
+
+    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
     MDF_ERROR_ASSERT(esp_eth_driver_install(&config, &eth_handle));
@@ -719,10 +720,10 @@ static void hb_task(void *args)
         if (mwifi_is_started() && node_child_connected)
         {
             mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
-            //MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+            // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
-    // FREE_MEM:
-    //     continue;
+        // FREE_MEM:
+        //     continue;
         vTaskDelay(10 / portTICK_RATE_MS);
         n++;
     }
@@ -770,8 +771,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    //ESP_ERROR_CHECK(initialize_flow_control());
-    //MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
@@ -782,12 +783,15 @@ void app_main()
      *      group id can be a custom address
      */
     const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                       {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
     //为了不组播自己
     const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xad},
-                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
     MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
                                            sizeof(group_id_list) / sizeof(group_id_list[0])));
+
+    // MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+    //                                        sizeof(group_id_list) / sizeof(group_id_list[0])));
 
     for (int i = 0; i < 6; i++)
     {
@@ -814,7 +818,7 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
-    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    // xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

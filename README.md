@@ -11,7 +11,8 @@ git push origin ZHONGHANGmdf
 # DebugÈÕÖ¾
 
 
-Ö®Ç°µÄÔÚ[ÓïÈ¸](https://www.yuque.com/u834735/nrtf4r/egagyw)
+Ö®Ç°µÄÔÚ[ÓïÈ¸](https://www.yuque.com
+/u834735/nrtf4r/egagyw)
 
 ## <span id = "1">0906</span>
 
@@ -280,3 +281,19 @@ Parent is disconnected, reason: 201[
 ~~~
 [16:46:2:199]Rx¡û?W (24395) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:9, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:0
 ~~~
+
+## <span id = "24">1026</span>
+1¡¢
+~~~
+ÏÖÔÚ1.4gÊÕ·¢¿ÉÒÔÎÈ¶¨ÔÚ22s£¬1000¸ö°ü£¬ÕâÑù²î²»¶àÁË£¬Ã÷Ìì°ÑÒÔÌ«Íø¼ÓÉÏ£¬Èç¹ûpingÃ»ÎÊÌâ¾Í²î²»¶àÁË£¬ÈçºÎ²âËÙÂú×ãÒªÇóÎÒÃÇ¿ÉÒÔÏë¸ö·½°¸¡£ºóÃæ²âÊÔ¾ÍÊÇÒÔÌ«Íøok£¬spi ok£¬×éÍøok¾ÍºÃÁË¡£Ã÷ÌìÖØµã²âÒÔÌ«Íø
+~~~
+2¡¢5ºÅ£ºÒÔÌ«ÍøÉÏĞĞ¡Ì ÏÂĞĞ¡Ì£¨Ö»ÓĞÁ½´Î³É¹¦¹ı£¿£¿£©  4ºÅ £ºÒÔÌ«ÍøÉÏĞĞ¡Ì ÏÂĞĞ´ı²â
+~~~
+ROOT£ºres = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+NONROOT£º
+ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
+res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
+~~~
+3¡¢ETHkit ÔÚ0825Á½¸öÉÏPING²»»á¿¨¶Ù£¬µ½ÁË0929¾Í»á¿¨¶Ù£¿£¿ÈËÂéÁË£¬¶øÇÒ0825²»»á×é²¥×Ô¼º£¬0929»á×é²¥×Ô¼º¡£\
+4¡¢¸ù¾İ3ÖĞ£¬½«0825Ö±½Ó¼ÓÈë1.4G¡£

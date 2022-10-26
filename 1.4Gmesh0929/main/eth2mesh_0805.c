@@ -427,29 +427,29 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to eth */
-        // if (s_ethernet_is_connected)
-        // {
-        //     if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-        //     {
-        //         ESP_LOGE(TAG, "Ethernet send packet failed");
-        //     }
-        // }
+        if (s_ethernet_is_connected)
+        {
+            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Ethernet send packet failed");
+            }
+        }
 
         /* forwoad to uart */
-        recv_count+=1;
-        HBheader[0]=buffer[0];
-        HBheader[1]=buffer[1];
-        HBheader[2]=buffer[2];
-        HBheader[3]=buffer[3];
-        HBheader[4]=buffer[4];
-        HBheader[5]=buffer[5];
-        //memcpy(HBheader,buffer,4);
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        //&&(recv_count%100==0)
-        if(buffer_len>20&&(recv_count%10==0)){
-            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
-            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
-        }
+        // recv_count+=1;
+        // HBheader[0]=buffer[0];
+        // HBheader[1]=buffer[1];
+        // HBheader[2]=buffer[2];
+        // HBheader[3]=buffer[3];
+        // HBheader[4]=buffer[4];
+        // HBheader[5]=buffer[5];
+        // //memcpy(HBheader,buffer,4);
+        // //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        // //&&(recv_count%100==0)
+        // if(buffer_len>800&&(recv_count%10==0)){
+        //     MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+        //     //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        // }
         //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
         
     FREE_MEM:
@@ -647,6 +647,8 @@ static mdf_err_t eth_init()
 #elif CONFIG_EXAMPLE_ETH_PHY_DP83848
     esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
 #endif
+    
+    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
     MDF_ERROR_ASSERT(esp_eth_driver_install(&config, &eth_handle));
@@ -784,8 +786,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    //ESP_ERROR_CHECK(initialize_flow_control());
-    //MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
