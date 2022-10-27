@@ -425,6 +425,10 @@ static void node_read_task(void *arg)
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
+        if (size == 98 || size == 74)
+        {
+            MDF_LOGI("Root Got ICMP From WiFi");
+        }
 
         /* forwoad to uart */
         // uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
@@ -491,6 +495,10 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len == 98 || len == 74)
+    {
+        MDF_LOGI("Root Got ICMP From ETH");
+    }
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -589,17 +597,17 @@ static mdf_err_t eth_init()
     mac_config.smi_mdc_gpio_num = CONFIG_EXAMPLE_ETH_MDC_GPIO;
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
-    #if CONFIG_EXAMPLE_ETH_PHY_IP101
-        esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-    #elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
-        esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
-    #elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
-        esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
-    #elif CONFIG_EXAMPLE_ETH_PHY_DP83848
-        esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
-    #endif
+#if CONFIG_EXAMPLE_ETH_PHY_IP101
+    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+#elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
+    esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+#elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
+    esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
+#elif CONFIG_EXAMPLE_ETH_PHY_DP83848
+    esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
+#endif
 
-    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    // esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
     MDF_ERROR_ASSERT(esp_eth_driver_install(&config, &eth_handle));
@@ -724,7 +732,7 @@ static void hb_task(void *args)
         }
         // FREE_MEM:
         //     continue;
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(1000 / portTICK_RATE_MS);
         n++;
     }
 }
@@ -820,5 +828,5 @@ void app_main()
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
-    // xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

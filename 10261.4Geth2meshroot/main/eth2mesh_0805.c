@@ -13,10 +13,74 @@
 // limitations under the License.
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
+//
 
 #include "mdf_common.h"
 #include "mwifi.h"
 #include "driver/uart.h"
+
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "esp_netif.h"
+
+#include "lwip/err.h"
+#include "lwip/sys.h"
+
+#include <stdio.h>
+#include "freertos/queue.h"
+#include "driver/gpio.h"
+#include <unistd.h>
+
+#include <sys/fcntl.h>
+#include <sys/errno.h>
+#include <sys/unistd.h>
+#include <sys/select.h>
+
+#include "esp_vfs.h"
+#include "esp_vfs_dev.h"
+#include "driver/uart.h"
+
+#include "esp_private/wifi.h"
+
+#include <stdlib.h>
+
+#include "sdkconfig.h"
+#include "esp_eth.h"
+
+#define GPIO_OUTPUT_IO_0 25 // SPI?_CLK（IO32） SPI_MOSI（IO2）  SPINSS(IO16)
+#define GPIO_OUTPUT_IO_1 16 // NSS
+#define GPIO_OUTPUT_IO_2 2  // MOSI
+#define GPIO_OUTPUT_IO_3 32 // CLK
+#define GPIO_OUTPUT_PIN_SEL ((1ULL << GPIO_OUTPUT_IO_0) | (1ULL << GPIO_OUTPUT_IO_1) | (1ULL << GPIO_OUTPUT_IO_2) | (1ULL << GPIO_OUTPUT_IO_3))
+#define GPIO_INPUT_IO_0 34
+#define GPIO_INPUT_IO_1 5
+#define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
+#define ESP_INTR_FLAG_DEFAULT 0
+
+#define ADF_CE_Set (gpio_set_level(GPIO_OUTPUT_IO_0, 1))
+#define ADF_CE_Clr (gpio_set_level(GPIO_OUTPUT_IO_0, 0))
+
+#define ADF_LE_Set (gpio_set_level(GPIO_OUTPUT_IO_1, 1))
+#define ADF_LE_Clr (gpio_set_level(GPIO_OUTPUT_IO_1, 0))
+
+#define ADF_DATA_Set (gpio_set_level(GPIO_OUTPUT_IO_2, 1))
+#define ADF_DATA_Clr (gpio_set_level(GPIO_OUTPUT_IO_2, 0))
+
+#define ADF_CLK_Set (gpio_set_level(GPIO_OUTPUT_IO_3, 1))
+#define ADF_CLK_Clr (gpio_set_level(GPIO_OUTPUT_IO_3, 0))
+
+static xQueueHandle gpio_evt_queue = NULL;
+uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
+                    // 注：输入频率的单位为MHz，R的范围为0~1023的整数
+                    // 默认输入频率为板载25M晶振，故得R为125。
+                    // 板载40M晶振，则R=200
+uint32_t F = 38000; // 350 初始频率35MHz
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -34,10 +98,8 @@ wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
-static bool g_root_got_ip = false;
-const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                     {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-uint8_t Rootaddr[6] = {0xFF,0x0,0x0,0x1,0x0,0x0};
+uint8_t Multiaddr[6] = {0};
+WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 typedef struct
 {
@@ -47,6 +109,146 @@ typedef struct
 
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
+
+static void IRAM_ATTR gpio_isr_handler(void *arg)
+{
+    uint32_t gpio_num = (uint32_t)arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
+static void gpio_task_example(void *arg)
+{
+    uint32_t io_num;
+    for (;;)
+    {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+        {
+            printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
+        }
+    }
+}
+
+static void GPIO_INIT(void)
+{
+    // zero-initialize the config structure.
+    gpio_config_t io_conf = {};
+    // disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    // set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    // bit mask of the pins that you want to set,e.g.GPIO18/19
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    // disable pull-down mode
+    io_conf.pull_down_en = 0;
+    // disable pull-up mode
+    io_conf.pull_up_en = 0;
+    // configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    // // interrupt of rising edge
+    // io_conf.intr_type = GPIO_INTR_POSEDGE;
+    // // bit mask of the pins, use GPIO4/5 here
+    // io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+    // // set as input mode
+    // io_conf.mode = GPIO_MODE_INPUT;
+    // // enable pull-up mode
+    // io_conf.pull_up_en = 1;
+    // gpio_config(&io_conf);
+
+    // // change gpio intrrupt type for one pin
+    // gpio_set_intr_type(GPIO_INPUT_IO_0, GPIO_INTR_ANYEDGE);
+
+    // create a queue to handle gpio event from isr
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    // start gpio task
+    // xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
+
+    // install gpio isr service
+    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+    // // hook isr handler for specific gpio pin
+    // gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void *)GPIO_INPUT_IO_0);
+    // // hook isr handler for specific gpio pin
+    // gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void *)GPIO_INPUT_IO_1);
+
+    // // remove isr handler for gpio number.
+    // gpio_isr_handler_remove(GPIO_INPUT_IO_0);
+    // // hook isr handler for specific gpio pin again
+    // gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void *)GPIO_INPUT_IO_0);
+
+    printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
+}
+
+//-----------------------------------------------------------------
+//函数名称:void ADF4351_Wdata(uint32_t dat)
+//函数功能:ADF4351写数据
+//入口参数:无
+//出口参数:无
+//-----------------------------------------------------------------
+
+void ADF4351_Wdata(uint32_t dat)
+{
+    uint8_t i;
+    ADF_CLK_Clr;
+    ADF_LE_Clr; //让32位移位寄存器准备接受下一次数据
+    for (i = 0; i < 32; i++)
+    {
+        if (dat & 0x80000000)
+            ADF_DATA_Set;
+        else
+            ADF_DATA_Clr;
+        dat <<= 1;
+        ADF_CLK_Set;
+        ADF_CLK_Clr; //数据在CLK上升沿时逐个输入32位移位寄存器
+    }
+    ADF_LE_Set; //打高使得32位移位寄存器按?的寄存器地址进行写入
+}
+
+//-----------------------------------------------------------------
+//函数名称:void ADF4351_Init(uint32_t date)
+//函数功能:ADF4351初始化
+//入口参数:无
+//出口参数:无
+//-----------------------------------------------------------------
+
+void ADF4351_Init(uint32_t date)
+{
+    ADF_CE_Set;
+    usleep(5);
+    // Delay_1us (5);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // portTICK_PERIOD_MS
+    ADF_CLK_Clr;
+    ADF_LE_Set;
+    ADF_DATA_Clr;
+    ADF4351_Wdata(0x00580005);              // 设置寄存器5 ：LD设置为数字锁定监测模式
+    ADF4351_Wdata(0x0060a43c);              // 设置寄存器4 : 差分输出功率设置为5dbm，使能静音至检测到锁定，频段选择时钟设为10K
+    ADF4351_Wdata(0x006004b3);              // 设置寄存器3	：charge cancellation，ABP设为1
+    ADF4351_Wdata(0x0D003Fc2 | R << 14);    // 设置寄存器2：电荷泵电流设为5mA，LDP,LDF设为1。
+    ADF4351_Wdata(0x08008011);              //	设置寄存器1 ：预分配器设为8/9
+    ADF4351_Wdata(0x00000000 | date << 15); // N分配器数据写入寄存器R0
+}
+
+void SetFreq(uint32_t F)
+{
+    ESP_LOGI(TAG, "I am here3");
+    if (F >= 690 && F <= 1370)
+        ADF4351_Wdata(0x0050443c); // if,else if中得语句是判断此时频率得范围
+    else if (F > 1370 && F <= 2740)
+        ADF4351_Wdata(0x0040443c); // 根据频率的范围确定我们要更新此时寄存器4（RF diver）的值
+    else if (F > 2740 && F <= 5490)
+        ADF4351_Wdata(0x0030143c);
+    else if (F > 5490 && F <= 10990)
+        ADF4351_Wdata(0x0020143c);
+    else if (F > 10990 && F <= 21990)
+        ADF4351_Wdata(0x0010143c);
+    else if (F > 21990)
+        ADF4351_Wdata(0x0000143c);
+    else
+        ADF4351_Wdata(0x0060443c);
+
+    ADF4351_Wdata(0x00000000 | F << 15); // 把要输出频率的字写入寄存器0，改变输出频率
+    ESP_LOGI(TAG, "Now Frequency is %d M:", F);
+}
 
 /**
  * @brief uart initialization
@@ -142,15 +344,15 @@ static void uart_handle_task(void *arg)
             for (int i = 0; i < MWIFI_ADDR_LEN; i++)
             {
                 dest_addr[i] = mac_data[i];
+                ESP_LOGI(" ", "%x", Multiaddr[i]);
             }
         } while (0);
-
         json_data = cJSON_GetObjectItem(json_root, "data");
         char *recv_data = cJSON_PrintUnformatted(json_data);
 
         size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        ret = mwifi_write(Rootaddr, &data_type, jsonstring, size, true);
-        //ret = mwifi_write(NULL, &data_type, jsonstring, size, true);
+        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
+        ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
     FREE_MEM:
@@ -173,9 +375,6 @@ static void node_read_task(void *arg)
     mwifi_data_type_t data_type = {0x0};
     uint8_t src_addr[MWIFI_ADDR_LEN] = {0x0};
 
-    uint8_t *buffer = NULL;
-    size_t buffer_len = 0;
-
     MDF_LOGI("Node read task is running");
 
     for (;;)
@@ -192,36 +391,27 @@ static void node_read_task(void *arg)
         /**
          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
          */
-        ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-        //ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-        // ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
-        // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
+        ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
-
-        if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
-        {
-            continue;
-        }
-        else if (ret != MDF_OK)
-        {
-            MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
-            goto FREE_MEM;
-        }
 
         /* forwoad to eth */
         if (s_ethernet_is_connected)
         {
-            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
 
+        if (size == 98 || size == 74)
+        {
+            MDF_LOGI("Root Got ICMP From WiFi");
+        }
         /* forwoad to uart */
-        uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
-    FREE_MEM:
-        MDF_FREE(buffer);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     }
 
     MDF_LOGW("Node read task is exit");
@@ -282,6 +472,10 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len == 98 || len == 74)
+    {
+        MDF_LOGI("Root Got ICMP From ETH");
+    }
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -299,29 +493,21 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = false;
+    data_type.group = true;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
         {
             timeout = 0;
-                        if (!ethernet2wifi_mac_status && wifi_init)
-            {
-                memcpy(s_eth_mac, (uint8_t *)msg.packet + 6, sizeof(s_eth_mac)); // added from eth2wifi
-                ESP_ERROR_CHECK(esp_wifi_start());
-                esp_wifi_set_mac(WIFI_IF_STA, s_eth_mac);
-                esp_wifi_connect();                      // reset the sta eth once more.added
-                ethernet2wifi_mac_status = true;
-            }
             if ((node_parent_connected || node_child_connected) && msg.length)
             {
                 do
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
-                    //res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
-                    
+                    // res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
+                    // res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -351,6 +537,7 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
         s_ethernet_is_connected = true;
         ESP_LOGI(TAG, "Ethernet HW Addr %02x:%02x:%02x:%02x:%02x:%02x",
                  mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+        esp_wifi_set_mac(WIFI_IF_AP, mac_addr);
         break;
 
     case ETHERNET_EVENT_DISCONNECTED:
@@ -365,32 +552,6 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
     case ETHERNET_EVENT_STOP:
         ESP_LOGI(TAG, "Ethernet Stopped");
         break;
-
-    default:
-        break;
-    }
-}
-
-/** Event handler for IP_EVENT_ETH_GOT_IP */
-static void ip_event_handler(void *arg, esp_event_base_t event_base,
-                             int32_t event_id, void *event_data)
-{
-    switch (event_id)
-    {
-    case IP_EVENT_ETH_GOT_IP:
-    {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        const esp_netif_ip_info_t *ip_info = &event->ip_info;
-
-        MDF_LOGI("Ethernet Got IP Address");
-        MDF_LOGI("ETHIP:" IPSTR, IP2STR(&ip_info->ip));
-        MDF_LOGI("ETHMASK:" IPSTR, IP2STR(&ip_info->netmask));
-        MDF_LOGI("ETHGW:" IPSTR, IP2STR(&ip_info->gw));
-
-        mdf_event_loop_send(MDF_EVENT_MWIFI_ROOT_GOT_IP, NULL);
-        g_root_got_ip = true;
-        break;
-    }
 
     default:
         break;
@@ -489,7 +650,7 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        // node_child_connected = false;
+        // node_child_connected = true;
 
     default:
         break;
@@ -509,13 +670,46 @@ static esp_err_t initialize_flow_control(void)
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
-    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
-    // if (ret != pdTRUE)
-    // {
-    //     ESP_LOGE(TAG, "create flow control task failed");
-    //     return ESP_FAIL;
-    // }
+    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, (tskIDLE_PRIORITY + 2), NULL);
+    //  if (ret != pdTRUE)
+    //  {
+    //      ESP_LOGE(TAG, "create flow control task failed");
+    //      return ESP_FAIL;
+    //  }
     return ESP_OK;
+}
+
+static void hb_task(void *args)
+{
+    int n = 0;
+    // Configure a temporary buffer for the incoming data
+    uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
+    size_t size = MWIFI_PAYLOAD_LEN;
+    // char *jsonstring = "ROOTHB";
+    uint8_t dest_addr[MWIFI_ADDR_LEN] = {0};
+    mwifi_data_type_t data_type = {0};
+    // uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
+    flow_control_msg_t msg;
+    // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
+
+    for (;;)
+    {
+        data_type.group = true;
+        sprintf(test14G, "ROOTHB number %04d.", n);
+        msg.packet = test14G;
+        msg.length = sizeof(test14G);
+        // uint8_t fuck =mwifi_is_started();
+        // MDF_LOGI("进来 %d",fuck);
+        if (mwifi_is_started() && node_child_connected)
+        {
+            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+            MDF_LOGI("%d", n);
+            // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+        }
+
+        vTaskDelay(1000 / portTICK_RATE_MS);
+        n++;
+    }
 }
 
 void app_main()
@@ -547,6 +741,17 @@ void app_main()
 
     MDF_ERROR_ASSERT(ret);
 
+    GPIO_INIT();
+    ESP_LOGI(TAG, "I am here1");
+    ADF4351_Init(F);
+    ESP_LOGI(TAG, "I am here2");
+    int cnt = 0;
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
+
+    ESP_LOGI(TAG, "Freq set.");
+
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
     ESP_ERROR_CHECK(initialize_flow_control());
@@ -560,9 +765,20 @@ void app_main()
      * @brief select/extend a group memebership here
      *      group id can be a custom address
      */
+    const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+    // MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+    //                                        sizeof(group_id_list) / sizeof(group_id_list[0])));
 
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+    const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xaa},
+                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
                                            sizeof(group_id_list) / sizeof(group_id_list[0])));
+
+    for (int i = 0; i < 6; i++)
+    {
+        Multiaddr[i] = group_id_list[0][i];
+    }
 
     /**
      * @brief Data transfer between wifi mesh devices
@@ -571,7 +787,7 @@ void app_main()
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
-    //             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+    //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     /* Periodic print system information */
     // TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
@@ -585,4 +801,6 @@ void app_main()
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+
+    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

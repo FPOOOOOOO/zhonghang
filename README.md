@@ -297,3 +297,9 @@ res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
 ~~~
 3、ETHkit 在0825两个上PING不会卡顿，到了0929就会卡顿？？人麻了，而且0825不会组播自己，0929会组播自己。\
 4、根据3中，将0825直接加入1.4G。
+
+## <span id = "24">1026</span>
+1、1.4G 和2.4G 板子互换烧录的时候要改GPIO0的晶振和IP101的驱动！！！\
+~~~
+W (30970) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:4, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:21
+~~~
