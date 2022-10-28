@@ -94,6 +94,10 @@ uint32_t F = 38000; // 350 ³õÊ¼ÆµÂÊ35MHz
 static bool node_parent_connected = false;
 static bool node_child_connected = false;
 static bool s_ethernet_is_connected = false;
+
+static bool ethernet2wifi_mac_status = false;
+static uint8_t s_eth_mac[6];
+
 wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
@@ -425,6 +429,10 @@ static void node_read_task(void *arg)
         {
             MDF_LOGI("Got ICMP From WiFi");
         }
+        if (buffer_len == 77)
+        {
+            MDF_LOGI("HBBOOM!");
+        }
         /* forwoad to uart */
         // uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
         // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
@@ -560,6 +568,7 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
     case ETHERNET_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "Ethernet Link Down");
         s_ethernet_is_connected = false;
+        ethernet2wifi_mac_status = false;
         break;
 
     case ETHERNET_EVENT_START:
@@ -693,7 +702,8 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        // node_child_connected = false;
+        node_child_connected = false;
+        break;
 
     default:
         break;

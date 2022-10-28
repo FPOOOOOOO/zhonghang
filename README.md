@@ -11,8 +11,7 @@ git push origin ZHONGHANGmdf
 # Debug日志
 
 
-之前的在[语雀](https://www.yuque.com
-/u834735/nrtf4r/egagyw)
+之前的在[语雀](https://www.yuque.com/u834735/nrtf4r/egagyw)
 
 ## <span id = "1">0906</span>
 
@@ -303,3 +302,15 @@ res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
 ~~~
 W (30970) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:4, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:21
 ~~~
+
+2、有16-26%的丢包率，20ms左右，但是前期有很多max_wnd和send flow control message failed or timeout。猜测和MAC地址设置有关，有3个TODO，一种是改MAC地址设置，一种是看混杂模式的具体原理，一种是学习David的，复制一份然后向上传一份（建议新开一个代码文件夹试）\
+3、4、5号机分别与两个EThkit组成，然后发现4号机的以太网有点问题。\
+
+## <span id = "24">1027</span>
+1、5号机作为Nonroot加入的时候Root会报这个错     \
+~~~
+[10:22:47:860]Rx←?I (158688) mesh: [TXQ]<max:64>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:12), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
+~~~
+
+2、

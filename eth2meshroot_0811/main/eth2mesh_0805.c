@@ -391,7 +391,6 @@ static mdf_err_t wifi_init()
     MDF_ERROR_ASSERT(esp_wifi_set_ps(WIFI_PS_NONE));
     MDF_ERROR_ASSERT(esp_mesh_set_6m_rate(false));
     MDF_ERROR_ASSERT(esp_wifi_start());
-
     return MDF_OK;
 }
 
@@ -437,7 +436,8 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        //node_child_connected = true;
+        node_child_connected = false;
+        break;
 
     default:
         break;
