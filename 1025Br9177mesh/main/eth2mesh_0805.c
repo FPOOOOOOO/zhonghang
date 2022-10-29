@@ -105,7 +105,7 @@ static xQueueHandle flow_control_queue = NULL;
 static bool g_root_got_ip = false;
 const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
                                      {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-uint8_t Rootaddr[6] = {0xFF,0x0,0x0,0x1,0x0,0x0};
+uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0};
 
 typedef struct
 {
@@ -115,7 +115,6 @@ typedef struct
 
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
-
 
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {
@@ -185,7 +184,6 @@ static void GPIO_INIT(void)
     printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
 }
 
-
 void BR9177_Wdata(uint32_t dat)
 {
     uint8_t i;
@@ -231,7 +229,7 @@ void SetFreq(uint16_t F)
     // uint32_t reg4=0x86200000 | ((FREF_DIV<<7)&0x1FFF80) | VCO_DIV ;
     // uint32_t reg3=0x6075c800 | (VCO<<24)
 
-    // //543210 
+    // //543210
     if (F == 200)
     {                             // 20M 2G
         BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
@@ -381,7 +379,8 @@ void SetFreq(uint16_t F)
         usleep(1000);
         BR9177_Wdata(0x05200000 | F); // 设置寄存器0：3200uA+INT                 0000 0101 1000 0
         usleep(1000);
-    }    else if (F == 160)
+    }
+    else if (F == 160)
     {                             // 20M 3.2G
         BR9177_Wdata(0xa000000a); // 设置寄存器5                             1010 0000 0000 0000 0000 0000 0000 1010
         usleep(1000);
@@ -399,7 +398,6 @@ void SetFreq(uint16_t F)
 
     ESP_LOGI(TAG, "Now Frequency is %d M:", F);
 }
-
 
 /**
  * @brief uart initialization
@@ -457,7 +455,7 @@ static void uart_handle_task(void *arg)
 
         ESP_LOGI("UART Recv data:", "%s", data);
         //这里开始改为串口透传
-        data_type.group=true;
+        data_type.group = true;
         //串口透传结束
         //这里开始是原来的选择性传送
         // json_root = cJSON_Parse((char *)data);
@@ -507,15 +505,15 @@ static void uart_handle_task(void *arg)
 
         // size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
         // ret = mwifi_write(Rootaddr, &data_type, jsonstring, size, true);
-        //ret = mwifi_write(NULL, &data_type, jsonstring, size, true);
+        // ret = mwifi_write(NULL, &data_type, jsonstring, size, true);
         //这里开始是原来的选择性传送结束
         ret = mwifi_write(Rootaddr, &data_type, data, recv_length, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-    // FREE_MEM:
-    //     MDF_FREE(recv_data);
-    //     MDF_FREE(jsonstring);
-    //     cJSON_Delete(json_root);
+        // FREE_MEM:
+        //     MDF_FREE(recv_data);
+        //     MDF_FREE(jsonstring);
+        //     cJSON_Delete(json_root);
     }
 
     MDF_LOGI("Uart handle task is exit");
@@ -558,10 +556,10 @@ static void node_read_task(void *arg)
          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
          */
         ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-        //ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-        // ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
-        // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-        // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
+        // ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
+        //  ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
+        //  MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
+        //  MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
         {
@@ -574,31 +572,40 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to eth */
-        // if (s_ethernet_is_connected)
-        // {
-        //     if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-        //     {
-        //         ESP_LOGE(TAG, "Ethernet send packet failed");
-        //     }
-        // }
+        if (s_ethernet_is_connected)
+        {
+            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Ethernet send packet failed");
+            }
+        }
+
+        if (buffer_len == 98 || buffer_len == 74)
+        {
+            MDF_LOGI("Got ICMP From WiFi");
+        }
+        if (buffer_len == 77)
+        {
+            MDF_LOGI("HBBOOM!");
+        }
 
         /* forwoad to uart */
-        recv_count+=1;
-        HBheader[0]=buffer[0];
-        HBheader[1]=buffer[1];
-        HBheader[2]=buffer[2];
-        HBheader[3]=buffer[3];
-        HBheader[4]=buffer[4];
-        HBheader[5]=buffer[5];
-        //memcpy(HBheader,buffer,4);
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
-        //&&(recv_count%100==0)
-        if(buffer_len>20&&(recv_count%10==0)){
-            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
-            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
-        }
-        //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
-        
+        // recv_count+=1;
+        // HBheader[0]=buffer[0];
+        // HBheader[1]=buffer[1];
+        // HBheader[2]=buffer[2];
+        // HBheader[3]=buffer[3];
+        // HBheader[4]=buffer[4];
+        // HBheader[5]=buffer[5];
+        // //memcpy(HBheader,buffer,4);
+        // //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        // //&&(recv_count%100==0)
+        // if(buffer_len>20&&(recv_count%10==0)){
+        //     MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+        //     //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        // }
+        // //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
+
     FREE_MEM:
         MDF_FREE(buffer);
     }
@@ -661,6 +668,10 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len == 98 || len == 74)
+    {
+        MDF_LOGI("Got ICMP From ETH");
+    }
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -691,8 +702,8 @@ static void eth2mesh_flow_control_task(void *args)
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
                     res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
-                    //res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
-                    
+                    // res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
+
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -893,7 +904,7 @@ void app_main()
 {
     mwifi_init_config_t cfg = MWIFI_INIT_CONFIG_DEFAULT();
     mwifi_config_t config = {
-        //CONFIG_MESH_CHANNEL
+        // CONFIG_MESH_CHANNEL
         .channel = 1,
         .mesh_id = CONFIG_MESH_ID,
         .mesh_type = CONFIG_DEVICE_TYPE,
@@ -942,8 +953,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    //ESP_ERROR_CHECK(initialize_flow_control());
-    //MDF_ERROR_ASSERT(eth_init());
+    ESP_ERROR_CHECK(initialize_flow_control());
+    MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
@@ -977,5 +988,5 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 }

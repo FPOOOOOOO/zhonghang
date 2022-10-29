@@ -589,7 +589,6 @@ static mdf_err_t eth_init()
     // MDF_ERROR_ASSERT(esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle)));
     esp_eth_ioctl(eth_handle, ETH_CMD_S_PROMISCUOUS, (void *)true);
     MDF_ERROR_ASSERT(esp_eth_start(eth_handle));
-
     return MDF_OK;
 }
 
