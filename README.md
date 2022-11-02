@@ -339,4 +339,9 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 
 
 ## <span id = "24">1101</span>
+1、esp.emac: no mem for receive buffer\
+2、4、5号机，在```10261.4Geth2mesh(root)```里比``console test``里用jperf要慢好多——猜测是idf.py配置的问题\
+3、Mwifi-Transmission-128(64)、240MHz(160)——tm的，改了以后不通了\
+
+## <span id = "25">1102</span>
 1、
