@@ -344,4 +344,5 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 3、Mwifi-Transmission-128(64)、240MHz(160)——tm的，改了以后不通了\
 
 ## <span id = "25">1102</span>
-1、
+1、4号又烧了\
+2、ETHkit————7号：128、240不行，以太网不通顺，改成128，160，就可以了？？
