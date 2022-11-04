@@ -346,3 +346,20 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 ## <span id = "25">1102</span>
 1¡¢4ºÅÓÖÉÕÁË\
 2¡¢ETHkit¡ª¡ª¡ª¡ª7ºÅ£º128¡¢240²»ĞĞ£¬ÒÔÌ«Íø²»Í¨Ë³£¬¸Ä³É128£¬160£¬¾Í¿ÉÒÔÁË£¿£¿
+
+## <span id = "25">1103</span>
+1¡¢SR8201 21Òı½ÅÃ»ÓĞÉÏÀ­£»12ºÅÒı½ÅĞü¿ÕÁË£»\
+2¡¢ init phy failed¡¢wrong chip ID£ºRST½ÅÃ»ÓĞÕıÈ·ÉÏÀ­£»
+~~~
+[0;31mE (806) rtl8201: rtl8201_init(352): wrong chip ID[0m
+[0;31mE (806) esp_eth: esp_eth_driver_install(223): init phy failed[0m
+~~~
+3¡¢
+~~~
+[0;31mE (922) rtl8201: rtl8201_pwrctl(261): power up timeout[0m
+[0;31mE (928) rtl8201: rtl8201_init(343): power control failed[0m
+[0;31mE (934) esp_eth: esp_eth_driver_install(223): init phy failed[0m
+
+[0;31mE (874) rtl8201: rtl8201_reset(167): reset timeout[0m
+[0;31mE (874) rtl8201: rtl8201_init(346): reset failed[0m
+~~~
