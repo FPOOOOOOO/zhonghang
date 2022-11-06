@@ -761,16 +761,16 @@ void app_main()
 
     MDF_ERROR_ASSERT(ret);
 
-    GPIO_INIT();
-    ESP_LOGI(TAG, "I am here1");
-    ADF4351_Init(F);
-    ESP_LOGI(TAG, "I am here2");
-    int cnt = 0;
-    SetFreq(F);
-    SetFreq(F);
-    SetFreq(F);
+    // GPIO_INIT();
+    // ESP_LOGI(TAG, "I am here1");
+    // ADF4351_Init(F);
+    // ESP_LOGI(TAG, "I am here2");
+    // int cnt = 0;
+    // SetFreq(F);
+    // SetFreq(F);
+    // SetFreq(F);
 
-    ESP_LOGI(TAG, "Freq set.");
+    // ESP_LOGI(TAG, "Freq set.");
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());

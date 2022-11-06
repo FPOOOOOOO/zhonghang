@@ -192,6 +192,11 @@ static void node_read_task(void *arg)
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
+
+    if (size == 98 || size == 74)
+    {
+        MDF_LOGI("Got ICMP From WiFi");
+    }
         /* forwoad to eth */
         if (s_ethernet_is_connected)
         {
@@ -200,6 +205,7 @@ static void node_read_task(void *arg)
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
+        
 
         /* forwoad to uart */
         // uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
@@ -264,6 +270,14 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    //         if (len){
+    //     MDF_LOGI("ETH Downlinking...");
+    // }
+            if (len == 98 || len == 74)
+    {
+        MDF_LOGI("Got ICMP From ETH");
+    }
+    
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -543,7 +557,11 @@ void app_main()
      */
     const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+
+    const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xaa},
+                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
                                            sizeof(group_id_list) / sizeof(group_id_list[0])));
 
     for (int i = 0; i < 6; i++)

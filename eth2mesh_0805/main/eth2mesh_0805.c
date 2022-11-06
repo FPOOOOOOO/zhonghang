@@ -290,6 +290,16 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len){
+        MDF_LOGI("ETH Downlinking...");
+    }
+    if (len == 98 || len == 74)
+    {
+        MDF_LOGI("Got ICMP From ETH");
+    }
+    if(len==42){
+        MDF_LOGI("Got ARP res From ETH");
+    }
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -424,6 +434,7 @@ static mdf_err_t eth_init()
 //     esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
 // #endif
 
+    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
