@@ -384,6 +384,9 @@ static void node_read_task(void *arg)
     uint8_t *buffer = NULL;
     size_t buffer_len = 0;
 
+    int recv_count = 0;
+    uint8_t HBheader[6];
+
     MDF_LOGI("Node read task is running");
 
     for (;;)
@@ -417,13 +420,13 @@ static void node_read_task(void *arg)
         }
 
         /* forwoad to eth */
-        if (s_ethernet_is_connected)
-        {
-            if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-            {
-                ESP_LOGE(TAG, "Ethernet send packet failed");
-            }
-        }
+        // if (s_ethernet_is_connected)
+        // {
+        //     if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
+        //     {
+        //         ESP_LOGE(TAG, "Ethernet send packet failed");
+        //     }
+        // }
 
         if (buffer_len == 98 || buffer_len == 74)
         {
@@ -434,6 +437,23 @@ static void node_read_task(void *arg)
             MDF_LOGI("HBBOOM!");
         }
         /* forwoad to uart */
+
+        recv_count+=1;
+        HBheader[0]=buffer[0];
+        HBheader[1]=buffer[1];
+        HBheader[2]=buffer[2];
+        HBheader[3]=buffer[3];
+        HBheader[4]=buffer[4];
+        HBheader[5]=buffer[5];
+        //memcpy(HBheader,buffer,4);
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
+        //&&(recv_count%100==0)
+        if(buffer_len>200&&(recv_count%10==0)){
+            MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
+            //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        }
+        //uart_write_bytes(CONFIG_UART_PORT_NUM, RSSI, RSSILEN);
+
         // uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
         // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     FREE_MEM:
@@ -761,21 +781,21 @@ void app_main()
 
     MDF_ERROR_ASSERT(ret);
 
-    // GPIO_INIT();
-    // ESP_LOGI(TAG, "I am here1");
-    // ADF4351_Init(F);
-    // ESP_LOGI(TAG, "I am here2");
-    // int cnt = 0;
-    // SetFreq(F);
-    // SetFreq(F);
-    // SetFreq(F);
+    GPIO_INIT();
+    ESP_LOGI(TAG, "I am here1");
+    ADF4351_Init(F);
+    ESP_LOGI(TAG, "I am here2");
+    int cnt = 0;
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
 
-    // ESP_LOGI(TAG, "Freq set.");
+    ESP_LOGI(TAG, "Freq set.");
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));

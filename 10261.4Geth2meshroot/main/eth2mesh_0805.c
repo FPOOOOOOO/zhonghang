@@ -99,7 +99,7 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 uint8_t Multiaddr[6] = {0};
-WORD_ALIGNED_ATTR char test14G[77] = "hihu";
+WORD_ALIGNED_ATTR char test14G[1000] = "hihu";
 
 typedef struct
 {
@@ -397,13 +397,13 @@ static void node_read_task(void *arg)
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         /* forwoad to eth */
-        if (s_ethernet_is_connected)
-        {
-            if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
-            {
-                ESP_LOGE(TAG, "Ethernet send packet failed");
-            }
-        }
+        // if (s_ethernet_is_connected)
+        // {
+        //     if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
+        //     {
+        //         ESP_LOGE(TAG, "Ethernet send packet failed");
+        //     }
+        // }
 
         if (size == 98 || size == 74)
         {
@@ -707,7 +707,7 @@ static void hb_task(void *args)
         }
 
 
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(10 / portTICK_RATE_MS);
         n++;
     }
 }
@@ -741,21 +741,21 @@ void app_main()
 
     MDF_ERROR_ASSERT(ret);
 
-    // GPIO_INIT();
-    // ESP_LOGI(TAG, "I am here1");
-    // ADF4351_Init(F);
-    // ESP_LOGI(TAG, "I am here2");
-    // int cnt = 0;
-    // SetFreq(F);
-    // SetFreq(F);
-    // SetFreq(F);
+    GPIO_INIT();
+    ESP_LOGI(TAG, "I am here1");
+    ADF4351_Init(F);
+    ESP_LOGI(TAG, "I am here2");
+    int cnt = 0;
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
 
-    // ESP_LOGI(TAG, "Freq set.");
+    ESP_LOGI(TAG, "Freq set.");
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
