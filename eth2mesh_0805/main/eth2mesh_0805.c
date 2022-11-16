@@ -221,7 +221,7 @@ static void node_read_task(void *arg)
         {
             MDF_LOGI("Got ICMP From WiFi");
         }
-        if (buffer_len == 77)
+        if (buffer_len == 77 && s_ethernet_is_connected)
         {
             MDF_LOGI("HBBOOM!");
         }

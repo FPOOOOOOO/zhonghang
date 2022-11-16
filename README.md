@@ -239,11 +239,11 @@ title:£¨ÃæÏò·ÉÐÐÆ÷µÄ)µØÃæ¼ì²âÎÞÏß×éÍøµ¥ÔªÏµÍ³ÑÐ¾¿ \
 2¡¢¶¼²»ÐÐ£¬ÍÆµ¹ÖØÀ´£¬»³ÒÉÊÇµÍÔë·Å¹©µçµÄÎÊÌâ£¨ÔÚ¸ÄÊÕ·¢½âñîµÄÊ±ºòÓÃµÄ£©\
 
 
-## <span id = "24">1020</span>
+## <span id = "25">1020</span>
 1¡¢×ó±ßµÄÊÇ·¢ËÍÍ¨Â·£¬¿¿½üÌìÏßÕâ±ßµÄÊÇÂË²¨Æ÷£¬°ÑËüÈ¥µô£¬ÈÃÊÕ·¢×ßÁ½¸öº¸³öÀ´µÄÌìÏß\
 2¡¢Ä¿Ç°ºÍ2.4G·Å´óÆ÷½á¹¹Ò»Ñù£¬ÔÚÊÕ·¢Í¨Â·ÉÏ·Ö±ð»ìÆµ£¨ÕâÑùÈÝÒ×ÂË²¨£©¡ª¡ª×¼±¸³¢ÊÔ×ÜµÄÒ»¸ö»ìÆµ£¬ÐèÒªÈ¥¹«Ë¾ÕÒ»ìÆµÆ÷\
 
-## <span id = "24">1024</span>
+## <span id = "26">1024</span>
 1¡¢½øÐÐ2.4GµÄËùÓÐÖ¸±êÅÅ²é \
 2¡¢Õâ¸ö¿ÉÒÔÔÚpingµÄÊ±ºò´òÓ¡Ê±¼ä´Á£¨MACOS£© WINÏÂPING·Ö±æÂÊ0.2 MAC0.1
 ~~~
@@ -255,7 +255,7 @@ ping 192.168.4.88 -i 0.2 | while read pong; do echo "$(date): $pong"; done
 6¡¢2048ÈÎÎñÕ»ÏÂ£¬SPItaskÀï¶¨Òåsendbuf168¿ÉÒÔ£¬169³¬±ê¡£¸Ä³É4096¿ÉÒÔ¡£ÔÚ2048ÏÂ£¬°Ñ¶¨Òå·Åµ½Õû¸öÍâÃæÒ²¿ÉÒÔ\
 7¡¢Ò»´Î·¢ËÍ1000Byte£¬delay10us£¬9000 000Hz£¬ÀíÂÛÄÜ¹»´ïµ½ÂÔÐ¡ÓÚ9Mbit/s£¬Êµ²â: 8.28Mbit/s    \
 
-## <span id = "24">1025</span>
+## <span id = "27">1025</span>
 1¡¢ÐÂµÄESP32Ð¾Æ¬£º
 ~~~
 rst:0x10 (RTCWDT_RTC_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
@@ -281,7 +281,7 @@ Parent is disconnected, reason: 201[
 [16:46:2:199]Rx¡û?W (24395) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:9, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:0
 ~~~
 
-## <span id = "24">1026</span>
+## <span id = "28">1026</span>
 1¡¢
 ~~~
 ÏÖÔÚ1.4gÊÕ·¢¿ÉÒÔÎÈ¶¨ÔÚ22s£¬1000¸ö°ü£¬ÕâÑù²î²»¶àÁË£¬Ã÷Ìì°ÑÒÔÌ«Íø¼ÓÉÏ£¬Èç¹ûpingÃ»ÎÊÌâ¾Í²î²»¶àÁË£¬ÈçºÎ²âËÙÂú×ãÒªÇóÎÒÃÇ¿ÉÒÔÏë¸ö·½°¸¡£ºóÃæ²âÊÔ¾ÍÊÇÒÔÌ«Íøok£¬spi ok£¬×éÍøok¾ÍºÃÁË¡£Ã÷ÌìÖØµã²âÒÔÌ«Íø
@@ -297,7 +297,7 @@ res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
 3¡¢ETHkit ÔÚ0825Á½¸öÉÏPING²»»á¿¨¶Ù£¬µ½ÁË0929¾Í»á¿¨¶Ù£¿£¿ÈËÂéÁË£¬¶øÇÒ0825²»»á×é²¥×Ô¼º£¬0929»á×é²¥×Ô¼º¡£\
 4¡¢¸ù¾Ý3ÖÐ£¬½«0825Ö±½Ó¼ÓÈë1.4G¡£
 
-## <span id = "24">1026</span>
+## <span id = "29">1026</span>
 1¡¢1.4G ºÍ2.4G °å×Ó»¥»»ÉÕÂ¼µÄÊ±ºòÒª¸ÄGPIO0µÄ¾§ÕñºÍIP101µÄÇý¶¯£¡£¡£¡\
 ~~~
 W (30970) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:4, 1200 ms timeout, seqno:0, xseqno:1, no_wnd_count:0, timeout_count:21
@@ -306,14 +306,14 @@ W (30970) mesh: [mesh_schedule.c,3130] [WND-RX]max_wnd:4, 1200 ms timeout, seqno
 2¡¢ÓÐ16-26%µÄ¶ª°üÂÊ£¬20ms×óÓÒ£¬µ«ÊÇÇ°ÆÚÓÐºÜ¶àmax_wndºÍsend flow control message failed or timeout¡£²Â²âºÍMACµØÖ·ÉèÖÃÓÐ¹Ø£¬ÓÐ3¸öTODO£¬Ò»ÖÖÊÇ¸ÄMACµØÖ·ÉèÖÃ£¬Ò»ÖÖÊÇ¿´»ìÔÓÄ£Ê½µÄ¾ßÌåÔ­Àí£¬Ò»ÖÖÊÇÑ§Ï°DavidµÄ£¬¸´ÖÆÒ»·ÝÈ»ºóÏòÉÏ´«Ò»·Ý£¨½¨ÒéÐÂ¿ªÒ»¸ö´úÂëÎÄ¼þ¼ÐÊÔ£©\
 3¡¢4¡¢5ºÅ»ú·Ö±ðÓëÁ½¸öEThkit×é³É£¬È»ºó·¢ÏÖ4ºÅ»úµÄÒÔÌ«ÍøÓÐµãÎÊÌâ¡£\
 
-## <span id = "24">1027</span>
+## <span id = "30">1027</span>
 1¡¢5ºÅ»ú×÷ÎªNonroot¼ÓÈëµÄÊ±ºòRoot»á±¨Õâ¸ö´í     \
 ~~~
 [10:22:47:860]Rx¡û?I (158688) mesh: [TXQ]<max:64>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:12), bcast:0, wnd(0, parent:00:00:00:00:00:00)
 I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 ~~~
 
-## <span id = "24">1029</span>
+## <span id = "31">1029</span>
 1¡¢5£ºÃ»ÎÊÌâ£¬ÓÐÊ±ºòping²»Í¨£¬pingÍ¨0%
 9177R£º1.4GÓÐÎÊÌâ£¬ÒÔÌ«ÍøÒªÏÈWiFiÔÙ²åÒÔÌ«Íø²ÅÐÐ£¬1.6%
 4£ºÏÈ²åÒÔÌ«Íø17%¶ª°ü£¬ºó²åÒÔÌ«Íø0%¶ª°ü
@@ -323,7 +323,7 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 8£ºËø²»×¡£¬ÒÔÌ«ÍøÉÔ²î£¬2.4G 4%
 9£ºËøµÃ×¡£¬ÒÔÌ«ÍøÃ»ÎÊÌâ£¬2.4G 0%
 
-## <span id = "24">1031</span>
+## <span id = "32">1031</span>
 1¡¢1.4G consoleÒª¸ÄÒ»ÏÂ£¬¸Ä³Éno router¡ª¡ªÒòÎªÃ»ÓÐ1.4GµÄrouter\
 ~~~
 5£ºÃ»ÎÊÌâ£¬ÓÐÊ±ºòping²»Í¨£¬pingÍ¨0%
@@ -338,16 +338,16 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 2¡¢ 79ºÍ45 ²î²»¶à¡¢68
 
 
-## <span id = "24">1101</span>
+## <span id = "33">1101</span>
 1¡¢esp.emac: no mem for receive buffer\
 2¡¢4¡¢5ºÅ»ú£¬ÔÚ```10261.4Geth2mesh(root)```Àï±È``console test``ÀïÓÃjperfÒªÂýºÃ¶à¡ª¡ª²Â²âÊÇidf.pyÅäÖÃµÄÎÊÌâ\
 3¡¢Mwifi-Transmission-128(64)¡¢240MHz(160)¡ª¡ªtmµÄ£¬¸ÄÁËÒÔºó²»Í¨ÁË\
 
-## <span id = "25">1102</span>
+## <span id = "34">1102</span>
 1¡¢4ºÅÓÖÉÕÁË\
 2¡¢ETHkit¡ª¡ª¡ª¡ª7ºÅ£º128¡¢240²»ÐÐ£¬ÒÔÌ«Íø²»Í¨Ë³£¬¸Ä³É128£¬160£¬¾Í¿ÉÒÔÁË£¿£¿
 
-## <span id = "25">1103</span>
+## <span id = "35">1103</span>
 1¡¢SR8201 21Òý½ÅÃ»ÓÐÉÏÀ­£»12ºÅÒý½ÅÐü¿ÕÁË£»\
 2¡¢ init phy failed¡¢wrong chip ID£ºRST½ÅÃ»ÓÐÕýÈ·ÉÏÀ­£»
 ~~~
@@ -364,24 +364,24 @@ I (158689) mesh: [RXQ]<max:64 = cfg:64 + extra:0>self:0, <max:64 = cfg:64 + extr
 [0;31mE (874) rtl8201: rtl8201_init(346): reset failed[0m
 ~~~
 
-## <span id = "25">1103</span>
+## <span id = "36">1103</span>
 1¡¢21ºÅÒý½ÅµÄ2.49KÒ²ºÜ¹Ø¼ü\
 2¡¢ÒÔÌ«ÍøÏÂÐÐ²»ÐÐ¡¢
 
 
-## <span id = "25">1106</span>
+## <span id = "37">1106</span>
 1¡¢¸Ã»»µÄ¶¼»»ÁË£¬×¼±¸ÖØÐÂÆÌÍ­\
 2¡¢ÒÔÌ«ÍøÍ¨Ñ¶Ç°»áÓÐ1010Í¬²½Âë£¬°Ñ1Í¬²½³É1¾ÍÊÇ1£¬°Ñ1Í¬²½³É0¾ÍÊÇ0£¨Èç¹ûTxÁ½ÌõÏß·´ÁËµÄ»°£©\
 3¡¢8Ö÷ 7´Ó
 
-## <span id = "25">1110</span>
+## <span id = "38">1110</span>
 1¡¢ÕÒÒ»ÏÂÂÛÎÄ£¬ÕÒµ½ÁË£¬·ÂÕæ\
 2¡¢°¢ÀïÔÆ5G»ùÕ¾µ÷ÊÔ\
 3¡¢ÕûÌåµÄ±äÆµÊÇ¿ÉÒÔµÄ£¬È»ºóÐèÒª¼ÓÒ»¸ö
 N-R 1.13
 R-N 1.56
 
-## <span id = "25">1113</span>
+## <span id = "39">1113</span>
 1¡¢µ½ÊµÑéÊÒ²âÏÂ1.4G£¬ÎÒÃÇ²âÏÂÍâ±ß±äÆµµ½1.4g£¬È»ºóÓÃÎÒÃÇ°åÉÏµÄ1.4gÊÕ·¢ÇÐ»»¼Ó·Å´óÈçºÎ¡£°åÉÏµÄ±äÆµÄÃµô\
 2¡¢AP¡ª¡ª2.4G¹¦·ÅÊÕ·¢ÇÐ»»¡ª¡ª7M
 AP¡ª¡ª1.4GÕûÌå»ìÆµ¡ª¡ª1M
@@ -392,6 +392,8 @@ AP¡ª¡ª1.4GÕûÌå»ìÆµ¡ª¡ª°å×ÓÇÐ»»µçÂ·¡ª¡ª(1-1.5M×óÓÒ)
 8:0dBÇÐ»»µÆÕý³£\
 3¡¢»ìÆµÔ­Àí
 
-## <span id = "25">1114</span>
+## <span id = "40">1114</span>
 1¡¢µ½ÎªºÎÉÏµç¾Ídownload¡ª¡ªENÉÙÁËÒ»¸ö100nFµÄRCÑÓÊ±µçÂ·(1.1uF¡¢0.2uF)¡¢IO0(²»ÉÏÀ­¡¢ÉÏÀ­20K¡¢ÏÂ½ÓµçÈÝ0.1uF)¡¢3.3VÉÏµç¿ìÒ»µã\
-2¡¢
+
+## <span id = "41">1115</span>
+1¡¢µ½ÎªºÎÉÏµç¾Ídownload¡ª¡ªENÉÙÁËÒ»¸ö100nFµÄRCÑÓÊ±µçÂ·(1.1uF¡¢0.2uF)¡¢IO0(²»ÉÏÀ­¡¢ÉÏÀ­20K¡¢ÏÂ½ÓµçÈÝ0.1uF)¡¢3.3VÉÏµç¿ìÒ»µã\
