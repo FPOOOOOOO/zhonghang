@@ -428,5 +428,8 @@ Backtrace:0x4008189e:0x3ffbe0f00x40088b45:0x3ffbe110 0x4008f955:0x3ffbe130 0x400
 
 
 ELF file SHA256: 8358e5c9f441bed9
-
 ~~~
+
+## <span id = "45">1125</span>
+1、发送新行是字符串把最后一位强行变成了00，所以在接收的时候多增加一位，就不用改7个包头到8个了。\
+2、eee好像是内存管理的问题，[这里](https://blog.csdn.net/gzxb1995/article/details/124504705)
