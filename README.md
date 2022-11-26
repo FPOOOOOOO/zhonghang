@@ -432,4 +432,8 @@ ELF file SHA256: 8358e5c9f441bed9
 
 ## <span id = "45">1125</span>
 1、发送新行是字符串把最后一位强行变成了00，所以在接收的时候多增加一位，就不用改7个包头到8个了。\
-2、eee好像是内存管理的问题，[这里](https://blog.csdn.net/gzxb1995/article/details/124504705)
+2、eee好像是内存管理的问题，[这里](https://blog.csdn.net/gzxb1995/article/details/124504705)\
+3、终端读取SPI数据时候一般作为slave，那么ZH的板子里IO34和IO2需要换网络位置\
+4、同时这样不是IOMUX，所以速度达不到8M\
+5、2号主机、1、3号主机（3号ETH有问题）\
+6、

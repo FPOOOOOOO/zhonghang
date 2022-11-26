@@ -134,16 +134,16 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        ESP_LOGI("UART Recv data:", "%s %d", data,recv_length);
+        //ESP_LOGI("UART Recv data:", "%c %d", data[recv_length-1],recv_length);
 
-        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 7);
-        bzero(uart2mesh_data, recv_length + 7);
+        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
+        bzero(uart2mesh_data, recv_length + 8);
         hjypackup(UART, recv_length, 0, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
         flow_control_msg_t msg = {
             .packet = uart2mesh_data,
-            .length = recv_length + 7};
+            .length = recv_length + 8};
         if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
         {
             // printf("eth2wifi is here:%s**********\n\r",buffer);
@@ -386,6 +386,7 @@ static void node_read_task(void *arg)
         if (recv_header == 0xA55A)
         {
             //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
+            //ESP_LOGI(TAG, "size is: %d", size);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 7);
             memcpy(mesh_data, data + 8, size - 7);
             if (meshmsgtype == UART)

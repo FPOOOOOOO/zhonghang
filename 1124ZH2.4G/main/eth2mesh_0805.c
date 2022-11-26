@@ -22,6 +22,8 @@
 #include "driver/spi_slave.h"
 #include "esp_spi_flash.h"
 
+#include <string.h>
+
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
 
@@ -50,10 +52,10 @@ static uint16_t recv_header = 0x0000;
 static uint8_t meshmsgtype = 0;
 
 // SPI para
-#define GPIO_MOSI 13 // 12
-#define GPIO_MISO 12 // 13
-#define GPIO_SCLK 14 // 15
-#define GPIO_CS 15   // 14 SPI for ESP
+#define GPIO_MOSI 34 // 10
+#define GPIO_MISO 2  //  9
+#define GPIO_SCLK 32 // 11
+#define GPIO_CS 16   // 2
 WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
@@ -136,16 +138,16 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        //ESP_LOGI("UART Recv data:", "%s", data);
+        // ESP_LOGI("UART Recv data:", "%s", data);
 
-        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 7);
-        bzero(uart2mesh_data, recv_length + 7);
+        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8); //ÈÝÄÉ×Ö·û´®×îºóÒ»Î»
+        bzero(uart2mesh_data, recv_length + 8);                       //ÈÝÄÉ×Ö·û´®
         hjypackup(UART, recv_length, 0, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
         flow_control_msg_t msg = {
             .packet = uart2mesh_data,
-            .length = recv_length + 7};
+            .length = recv_length + 8};
         if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
         {
             // printf("eth2wifi is here:%s**********\n\r",buffer);
@@ -226,8 +228,8 @@ static void spi_task(void *pvParameters)
         .mosi_io_num = GPIO_MOSI,
         .miso_io_num = GPIO_MISO,
         .sclk_io_num = GPIO_SCLK,
-        .flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
-        .quadwp_io_num = -1,                   // added -1 default
+        //.flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
+        .quadwp_io_num = -1, // added -1 default
         .quadhd_io_num = -1,
     };
 
@@ -262,11 +264,15 @@ static void spi_task(void *pvParameters)
 
     // ESP_LOGE(TAG, "I am 1");
     //  WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
-    WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
-    memset(recvbuf, 0, 33);
+
+
+    //WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
+    uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
+
+    //memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
-    memset(recvbuf, 0x23, 129);
+    memset(recvbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
 
     while (1)
@@ -274,16 +280,11 @@ static void spi_task(void *pvParameters)
         // Clear receive buffer, set send buffer to something sane
         // memset(recvbuf, 0xA5, 129);
         // ESP_LOGE(TAG, "I am 3");
-        if (meshmsgtype == SPI)
+
+        int res = sprintf(sendbuf, "Htis is from Nonroot, number %04d.", n);
+        if (res >= sizeof(sendbuf))
         {
-        }
-        else
-        {
-            int res = sprintf(sendbuf, "Htis is from Nonroot, number %04d.", n);
-            if (res >= sizeof(sendbuf))
-            {
-                printf("Data truncated\n");
-            }
+            printf("Data truncated\n");
         }
 
         // ESP_LOGE(TAG, "I am 4");
@@ -318,9 +319,20 @@ static void spi_task(void *pvParameters)
 
         // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         // received data from the master. Print it.
-        printf(" %d Received: %s\n", n, recvbuf);
+         printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
-        uint8_t SPIlength = sizeof(recvbuf);
+
+        uint8_t SPIlength = 0;
+
+        for(int i=0;i<129;i++){
+            if(recvbuf[i]==0) {
+                SPIlength=i+1;
+                break;
+            }
+        }
+        
+        //printf(" SPIlength: %d\n",SPIlength);
+
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 7);
         bzero(spi2mesh_data, SPIlength + 7);
 
@@ -348,6 +360,12 @@ static void spi_task(void *pvParameters)
             n = 0;
         }
     }
+
+    MDF_LOGI("SPI task is exit");
+
+    MDF_FREE(recvbuf);
+    vTaskDelete(NULL);
+
 }
 
 static void node_read_task(void *arg)
@@ -384,12 +402,12 @@ static void node_read_task(void *arg)
         recv_header = ntohs(recv_header);
         if (recv_header == 0xA55A)
         {
-            //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
+            // ESP_LOGI(TAG, "size is: %d", size);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 7);
             memcpy(mesh_data, data + 8, size - 7);
             if (meshmsgtype == UART)
             {
-                printf("UART:%d \n",size-7);
+                printf("UART:\n");
             }
             else if (meshmsgtype == SPI)
             {
@@ -417,7 +435,6 @@ static void node_read_task(void *arg)
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
-
     }
 
     MDF_LOGW("Node read task is exit");
@@ -425,7 +442,6 @@ static void node_read_task(void *arg)
     MDF_FREE(data);
     vTaskDelete(NULL);
 }
-
 
 // static void node_read_task(void *arg)
 // {
@@ -721,7 +737,7 @@ static mdf_err_t eth_init()
     //     esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
     // #endif
 
-    // esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
@@ -887,5 +903,5 @@ void app_main()
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
-    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 }
