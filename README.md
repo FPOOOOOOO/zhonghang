@@ -437,5 +437,6 @@ ELF file SHA256: 8358e5c9f441bed9
 4、同时这样不是IOMUX，所以速度达不到8M\
 5、2号主机、1、3号主机（3号ETH有问题）\
 
-## <span id = "46">1126</span>
-1、板子到了，准备焊接\
+## <span id = "46">1129</span>
+1、进行了[计算机网络的学习](https://www.yuque.com/u834735/nrtf4r/nu54m8gr9cwexzhb)\
+
