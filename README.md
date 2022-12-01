@@ -443,3 +443,7 @@ ELF file SHA256: 8358e5c9f441bed9
 
 ## <span id = "47">1130</span>
 1、继续进行[计算机网络的学习](https://www.yuque.com/u834735/nrtf4r/nu54m8gr9cwexzhb)\
+2、第五章没看、第六章只看了6.1DNS、第7章、第8章都没看
+
+## <span id = "48">1201</span>
+1、
