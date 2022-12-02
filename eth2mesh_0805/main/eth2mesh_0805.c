@@ -290,9 +290,6 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
-    if (len){
-        MDF_LOGI("ETH Downlinking...");
-    }
     if (len == 98 || len == 74)
     {
         MDF_LOGI("Got ICMP From ETH");

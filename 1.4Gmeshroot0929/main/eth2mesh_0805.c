@@ -495,6 +495,10 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len)
+    {
+        MDF_LOGI("ETH Downlinking");
+    }
     if (len == 98 || len == 74)
     {
         MDF_LOGI("Root Got ICMP From ETH");
@@ -597,17 +601,17 @@ static mdf_err_t eth_init()
     mac_config.smi_mdc_gpio_num = CONFIG_EXAMPLE_ETH_MDC_GPIO;
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
-#if CONFIG_EXAMPLE_ETH_PHY_IP101
-    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
-    esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
-    esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
-#elif CONFIG_EXAMPLE_ETH_PHY_DP83848
-    esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
-#endif
+// #if CONFIG_EXAMPLE_ETH_PHY_IP101
+//     esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+// #elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
+//     esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+// #elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
+//     esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
+// #elif CONFIG_EXAMPLE_ETH_PHY_DP83848
+//     esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
+// #endif
 
-    // esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
     MDF_ERROR_ASSERT(esp_eth_driver_install(&config, &eth_handle));

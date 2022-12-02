@@ -446,4 +446,12 @@ ELF file SHA256: 8358e5c9f441bed9
 2、第五章没看、第六章只看了6.1DNS、第7章、第8章都没看
 
 ## <span id = "48">1201</span>
-1、
+1、8201的TXC是O/PD，所以是下拉的。解决方案是我们这边\
+2、2.4G能PING通是下面这组代码：
+~~~
+eth2mesh_0805
+eth2meshroot_0811
+~~~
+3、ZH的是带ZH字样的代码\
+4、继续进行[计算机网络的学习](https://www.yuque.com/u834735/nrtf4r/nu54m8gr9cwexzhb)，从第9章开始看\
+5、
