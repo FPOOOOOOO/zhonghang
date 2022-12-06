@@ -207,8 +207,8 @@ static void node_read_task(void *arg)
         }
         
         /* forwoad to uart */
-        uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
-        uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
+        // uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
     }
 
     MDF_LOGW("Node read task is exit");
