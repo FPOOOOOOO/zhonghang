@@ -707,7 +707,7 @@ static void hb_task(void *args)
         }
 
 
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(5 / portTICK_RATE_MS);
         n++;
     }
 }

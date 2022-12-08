@@ -448,7 +448,7 @@ static void node_read_task(void *arg)
         //memcpy(HBheader,buffer,4);
         //uart_write_bytes(CONFIG_UART_PORT_NUM, buffer, buffer_len);
         //&&(recv_count%100==0)
-        if(buffer_len>200&&(recv_count%10==0)){
+        if(buffer_len>200&&(recv_count%20==0)){
             MDF_LOGI("HBNUM:%s,len: %d rssi: %d count: %d \n",HBheader,buffer_len,mwifi_get_parent_rssi(),recv_count);
             //uart_write_bytes(CONFIG_UART_PORT_NUM, "\r\n", 2);
         }
