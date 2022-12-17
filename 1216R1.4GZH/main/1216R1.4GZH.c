@@ -13,7 +13,7 @@
 // limitations under the License.
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
-// 1124: 2.4G可用版，上行和SPI待优化。
+// 1124: 2.4G 可用版本，SPI有些许问题
 
 #include "mdf_common.h"
 #include "mwifi.h"
@@ -23,7 +23,7 @@
 #include "driver/spi_slave.h"
 #include "esp_spi_flash.h"
 
-#include <string.h>
+#include "1.4G.h"
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -41,10 +41,8 @@ wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
-static bool g_root_got_ip = false;
-const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                     {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0};
+uint8_t Multiaddr[6] = {0};
+WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
@@ -53,13 +51,14 @@ static uint16_t recv_header = 0x0000;
 static uint8_t meshmsgtype = 0;
 
 // SPI para
-#define GPIO_MOSI 34 // 10
-#define GPIO_MISO 2  //  9
-#define GPIO_SCLK 32 // 11
-#define GPIO_CS 16   // 2
+#define GPIO_MOSI 13 // 12
+#define GPIO_MISO 12 // 13
+#define GPIO_SCLK 14 // 15
+#define GPIO_CS 15   // 14 SPI for ESP
 WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
+
 
 typedef struct
 {
@@ -139,10 +138,10 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        // ESP_LOGI("UART Recv data:", "%s", data);
+        //ESP_LOGI("UART Recv data:", "%c %d", data[recv_length-1],recv_length);
 
-        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8); //容纳字符串最后一位
-        bzero(uart2mesh_data, recv_length + 8);                       //容纳字符串
+        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
+        bzero(uart2mesh_data, recv_length + 8);
         hjypackup(UART, recv_length, 0, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
@@ -196,16 +195,17 @@ static void uart_handle_task(void *arg)
         //     for (int i = 0; i < MWIFI_ADDR_LEN; i++)
         //     {
         //         dest_addr[i] = mac_data[i];
+        //         ESP_LOGI(" ", "%x", Multiaddr[i]);
         //     }
         // } while (0);
-
         // json_data = cJSON_GetObjectItem(json_root, "data");
         // char *recv_data = cJSON_PrintUnformatted(json_data);
 
         // size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        // ret = mwifi_write(Rootaddr, &data_type, jsonstring, size, true);
-        // ret = mwifi_write(NULL, &data_type, jsonstring, size, true);
-        // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
+
+        //     ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
+        //     MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
         // FREE_MEM:
         //     MDF_FREE(recv_data);
@@ -219,6 +219,7 @@ static void uart_handle_task(void *arg)
     vTaskDelete(NULL);
 }
 
+
 static void spi_task(void *pvParameters)
 {
     int n = 0;
@@ -229,8 +230,8 @@ static void spi_task(void *pvParameters)
         .mosi_io_num = GPIO_MOSI,
         .miso_io_num = GPIO_MISO,
         .sclk_io_num = GPIO_SCLK,
-        //.flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
-        .quadwp_io_num = -1, // added -1 default
+        .flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
+        .quadwp_io_num = -1,                   // added -1 default
         .quadhd_io_num = -1,
     };
 
@@ -265,15 +266,11 @@ static void spi_task(void *pvParameters)
 
     // ESP_LOGE(TAG, "I am 1");
     //  WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
-
-
-    //WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
-    uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
-
-    //memset(recvbuf, 0, 33);
+    WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
+    memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
-    memset(recvbuf, 0, 129);
+    memset(recvbuf, 0x23, 129);
     // ESP_LOGE(TAG, "I am 2");
 
     while (1)
@@ -281,11 +278,17 @@ static void spi_task(void *pvParameters)
         // Clear receive buffer, set send buffer to something sane
         // memset(recvbuf, 0xA5, 129);
         // ESP_LOGE(TAG, "I am 3");
-
-        int res = sprintf(sendbuf, "Htis is from Nonroot, number %04d.", n);
-        if (res >= sizeof(sendbuf))
+        if (meshmsgtype == SPI)
         {
-            printf("Data truncated\n");
+            //Got SPI data from mesh into sendbuf
+        }
+        else
+        {
+            int res = sprintf(sendbuf, "Htis is from Root, number %04d.", n);
+            if (res >= sizeof(sendbuf))
+            {
+                printf("Data truncated\n");
+            }
         }
 
         // ESP_LOGE(TAG, "I am 4");
@@ -320,20 +323,9 @@ static void spi_task(void *pvParameters)
 
         // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         // received data from the master. Print it.
-         printf(" %d Received: %s\n", n, recvbuf);
+        printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
-
-        uint8_t SPIlength = 0;
-
-        for(int i=0;i<129;i++){
-            if(recvbuf[i]==0) {
-                SPIlength=i+1;
-                break;
-            }
-        }
-        
-        //printf(" SPIlength: %d\n",SPIlength);
-
+        uint8_t SPIlength = sizeof(recvbuf);
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 7);
         bzero(spi2mesh_data, SPIlength + 7);
 
@@ -361,13 +353,8 @@ static void spi_task(void *pvParameters)
             n = 0;
         }
     }
-
-    MDF_LOGI("SPI task is exit");
-
-    MDF_FREE(recvbuf);
-    vTaskDelete(NULL);
-
 }
+
 
 static void node_read_task(void *arg)
 {
@@ -403,18 +390,21 @@ static void node_read_task(void *arg)
         recv_header = ntohs(recv_header);
         if (recv_header == 0xA55A)
         {
-            // ESP_LOGI(TAG, "size is: %d", size);
+            //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
+            //ESP_LOGI(TAG, "size is: %d", size);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 7);
             memcpy(mesh_data, data + 8, size - 7);
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
+                uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 7);
             }
             else if (meshmsgtype == SPI)
             {
                 printf("SPI:\n");
+                memcpy(sendbuf,mesh_data,size-7);
             }
-            uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 7);
+            
 
             // for (int i = 0; i < len - 11; i++)
             // {
@@ -436,6 +426,7 @@ static void node_read_task(void *arg)
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
+
     }
 
     MDF_LOGW("Node read task is exit");
@@ -443,104 +434,6 @@ static void node_read_task(void *arg)
     MDF_FREE(data);
     vTaskDelete(NULL);
 }
-
-// static void node_read_task(void *arg)
-// {
-//     mdf_err_t ret = MDF_OK;
-//     char *data = MDF_MALLOC(MWIFI_PAYLOAD_LEN);
-//     size_t size = MWIFI_PAYLOAD_LEN;
-//     mwifi_data_type_t data_type = {0x0};
-//     uint8_t src_addr[MWIFI_ADDR_LEN] = {0x0};
-
-//     uint8_t *buffer = NULL;
-//     size_t buffer_len = 0;
-
-//     MDF_LOGI("Node read task is running");
-
-//     for (;;)
-//     {
-//         if (!mwifi_is_connected() && !(mwifi_is_started() && esp_mesh_is_root()))
-//         {
-//             vTaskDelay(500 / portTICK_RATE_MS);
-//             continue;
-//         }
-
-//         size = MWIFI_PAYLOAD_LEN;
-//         memset(data, 0, MWIFI_PAYLOAD_LEN);
-
-//         /**
-//          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
-//          */
-//         ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-//         // ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-//         //  ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
-//         //  MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-//         //  MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
-
-//         if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
-//         {
-//             continue;
-//         }
-//         else if (ret != MDF_OK)
-//         {
-//             MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
-//             goto FREE_MEM;
-//         }
-
-//         memcpy((uint16_t *)&recv_header, buffer, 2);
-//         memcpy((uint8_t *)&meshmsgtype, buffer + 2, 1);
-//         recv_header = ntohs(recv_header);
-//         if (recv_header == 0xA55A)
-//         {
-//             //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
-//             uint8_t *mesh_data = (uint8_t *)malloc(buffer_len - 7);
-//             memcpy(mesh_data, buffer + 8, buffer_len - 7);
-//             if (meshmsgtype == UART)
-//             {
-//                 printf("UART:\n");
-//             }
-//             else if (meshmsgtype == SPI)
-//             {
-//                 printf("SPI:\n");
-//                 memcpy(sendbuf, mesh_data, buffer_len - 7);
-//             }
-//             uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, buffer_len - 7);
-
-//             // for (int i = 0; i < len - 11; i++)
-//             // {
-//             //     printf("%c", ((char *)wifi_data)[i]);
-//             // }
-//             free(mesh_data);
-//             // printf("\n\r");
-//         }
-
-//         /* forwoad to eth */
-//         if (s_ethernet_is_connected)
-//         {
-//             if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-//             {
-//                 ESP_LOGE(TAG, "Ethernet send packet failed");
-//             }
-//         }
-
-//         // if (buffer_len == 98 || buffer_len == 74)
-//         // {
-//         //     MDF_LOGI("Got ICMP From WiFi");
-//         // }
-//         // if (buffer_len == 77 && s_ethernet_is_connected)
-//         // {
-//         //     MDF_LOGI("HBBOOM!");
-//         // }
-
-//     FREE_MEM:
-//         MDF_FREE(buffer);
-//     }
-
-//     MDF_LOGW("Node read task is exit");
-
-//     MDF_FREE(data);
-//     vTaskDelete(NULL);
-// }
 
 /**
  * @brief printing system information
@@ -594,16 +487,14 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
-    // if (len){
+    //         if (len){
     //     MDF_LOGI("ETH Downlinking...");
     // }
-    // if (len == 98 || len == 74)
+    //         if (len == 98 || len == 74)
     // {
     //     MDF_LOGI("Got ICMP From ETH");
     // }
-    // if(len==42){
-    //     MDF_LOGI("Got ARP res From ETH");
-    // }
+
     if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
     {
         ESP_LOGE(TAG, "send flow control message failed or timeout");
@@ -621,7 +512,7 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = false;
+    data_type.group = true;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -633,9 +524,9 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
-                    // res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
-
+                    // res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
+                    // res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -685,32 +576,6 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-/** Event handler for IP_EVENT_ETH_GOT_IP */
-static void ip_event_handler(void *arg, esp_event_base_t event_base,
-                             int32_t event_id, void *event_data)
-{
-    switch (event_id)
-    {
-    case IP_EVENT_ETH_GOT_IP:
-    {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        const esp_netif_ip_info_t *ip_info = &event->ip_info;
-
-        MDF_LOGI("Ethernet Got IP Address");
-        MDF_LOGI("ETHIP:" IPSTR, IP2STR(&ip_info->ip));
-        MDF_LOGI("ETHMASK:" IPSTR, IP2STR(&ip_info->netmask));
-        MDF_LOGI("ETHGW:" IPSTR, IP2STR(&ip_info->gw));
-
-        mdf_event_loop_send(MDF_EVENT_MWIFI_ROOT_GOT_IP, NULL);
-        g_root_got_ip = true;
-        break;
-    }
-
-    default:
-        break;
-    }
-}
-
 static mdf_err_t eth_init()
 {
     // esp_netif_config_t eth_cfg = ESP_NETIF_DEFAULT_ETH();
@@ -728,18 +593,10 @@ static mdf_err_t eth_init()
     mac_config.smi_mdc_gpio_num = CONFIG_EXAMPLE_ETH_MDC_GPIO;
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
-    // #if CONFIG_EXAMPLE_ETH_PHY_IP101
-    //     esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-    // #elif CONFIG_EXAMPLE_ETH_PHY_RTL8201
-    //     esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
-    // #elif CONFIG_EXAMPLE_ETH_PHY_LAN8720
-    //     esp_eth_phy_t *phy = esp_eth_phy_new_lan8720(&phy_config);
-    // #elif CONFIG_EXAMPLE_ETH_PHY_DP83848
-    //     esp_eth_phy_t *phy = esp_eth_phy_new_dp83848(&phy_config);
-    // #endif
 
-    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-    esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    //esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
     MDF_ERROR_ASSERT(esp_eth_driver_install(&config, &eth_handle));
@@ -760,7 +617,6 @@ static mdf_err_t wifi_init()
     MDF_ERROR_ASSERT(esp_wifi_set_ps(WIFI_PS_NONE));
     MDF_ERROR_ASSERT(esp_mesh_set_6m_rate(false));
     MDF_ERROR_ASSERT(esp_wifi_start());
-
     return MDF_OK;
 }
 
@@ -827,13 +683,46 @@ static esp_err_t initialize_flow_control(void)
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
-    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
-    // if (ret != pdTRUE)
-    // {
-    //     ESP_LOGE(TAG, "create flow control task failed");
-    //     return ESP_FAIL;
-    // }
+    // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, (tskIDLE_PRIORITY + 2), NULL);
+    //  if (ret != pdTRUE)
+    //  {
+    //      ESP_LOGE(TAG, "create flow control task failed");
+    //      return ESP_FAIL;
+    //  }
     return ESP_OK;
+}
+
+static void hb_task(void *args)
+{
+    int n = 0;
+    // Configure a temporary buffer for the incoming data
+    uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
+    size_t size = MWIFI_PAYLOAD_LEN;
+    // char *jsonstring = "ROOTHB";
+    uint8_t dest_addr[MWIFI_ADDR_LEN] = {0};
+    mwifi_data_type_t data_type = {0};
+    // uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
+    flow_control_msg_t msg;
+    // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
+
+    for (;;)
+    {
+        data_type.group = true;
+        sprintf(test14G, "ROOTHB number %04d.", n);
+        msg.packet = test14G;
+        msg.length = sizeof(test14G);
+        // uint8_t fuck =mwifi_is_started();
+        // MDF_LOGI("进来 %d",fuck);
+        if (mwifi_is_started() && node_child_connected)
+        {
+            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+            MDF_LOGI("%d", n);
+            // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+        }
+
+        vTaskDelay(1000 / portTICK_RATE_MS);
+        n++;
+    }
 }
 
 void app_main()
@@ -865,6 +754,15 @@ void app_main()
 
     MDF_ERROR_ASSERT(ret);
 
+    GPIO_INIT();
+    ESP_LOGI(TAG, "I am here1");
+    ADF4351_Init(F);
+    ESP_LOGI(TAG, "I am here2");
+    int cnt = 0;
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
+
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
     ESP_ERROR_CHECK(initialize_flow_control());
@@ -878,9 +776,19 @@ void app_main()
      * @brief select/extend a group memebership here
      *      group id can be a custom address
      */
+    const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
 
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
+    const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xaa},
+                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
                                            sizeof(group_id_list) / sizeof(group_id_list[0])));
+
+    for (int i = 0; i < 6; i++)
+    {
+        Multiaddr[i] = group_id_list[0][i];
+    }
 
     /**
      * @brief Data transfer between wifi mesh devices
@@ -889,7 +797,7 @@ void app_main()
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
-    //             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+    //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     /* Periodic print system information */
     // TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
@@ -902,7 +810,9 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+
+    //xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
+// 1124: 2.4G 可用版本，SPI有些许问题
 
 #include "mdf_common.h"
 #include "mwifi.h"

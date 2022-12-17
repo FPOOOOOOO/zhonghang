@@ -25,6 +25,8 @@
 
 #include <string.h>
 
+#include "1.4G.h"
+
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
 
@@ -320,7 +322,7 @@ static void spi_task(void *pvParameters)
 
         // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         // received data from the master. Print it.
-         printf(" %d Received: %s\n", n, recvbuf);
+        printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
 
         uint8_t SPIlength = 0;
@@ -864,6 +866,15 @@ void app_main()
     }
 
     MDF_ERROR_ASSERT(ret);
+
+    GPIO_INIT();
+    ESP_LOGI(TAG, "I am here1");
+    ADF4351_Init(F);
+    ESP_LOGI(TAG, "I am here2");
+    int cnt = 0;
+    SetFreq(F);
+    SetFreq(F);
+    SetFreq(F);
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());

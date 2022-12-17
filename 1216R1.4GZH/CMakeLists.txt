@@ -7,4 +7,4 @@ if(NOT DEFINED $ENV{MDF_PATH})
 endif()
 include($ENV{MDF_PATH}/project.cmake)
 
-project(12161.4GZH)
+project(1216R1.4GZH)
