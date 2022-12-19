@@ -54,11 +54,17 @@ static uint16_t recv_header = 0x0000;
 #define SPI (uint8_t)7
 static uint8_t meshmsgtype = 0;
 
-// SPI para
-#define GPIO_MOSI 34 // 10
-#define GPIO_MISO 2  //  9
-#define GPIO_SCLK 32 // 11
-#define GPIO_CS 16   // 2
+// SPI para  FOR ZH
+// #define GPIO_MOSI 34 // 10
+// #define GPIO_MISO 2  //  9
+// #define GPIO_SCLK 32 // 11
+// #define GPIO_CS 16   // 2
+
+#define GPIO_MOSI 13 // 12
+#define GPIO_MISO 12 // 13
+#define GPIO_SCLK 14 // 15
+#define GPIO_CS 15   // 14 SPI for ESP
+
 WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
@@ -411,6 +417,7 @@ static void node_read_task(void *arg)
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
+                meshmsgtype=0;
             }
             else if (meshmsgtype == SPI)
             {
@@ -915,5 +922,5 @@ void app_main()
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
-    xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 }

@@ -681,6 +681,8 @@ static esp_err_t initialize_flow_control(void)
 static void hb_task(void *args)
 {
     int n = 0;
+    int Fuck=0;
+    int res = 0;
     // Configure a temporary buffer for the incoming data
     uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
     size_t size = MWIFI_PAYLOAD_LEN;
@@ -701,9 +703,13 @@ static void hb_task(void *args)
         // MDF_LOGI("½øÀ´ %d",fuck);
         if (mwifi_is_started() && node_child_connected)
         {
-            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+
+            res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+            if(res != MDF_OK){
+                Fuck+=1;
+            }
             esp_wifi_ap_get_sta_list(&wifi_sta_list);
-            MDF_LOGI("%d rssi: %d",n,wifi_sta_list.sta[0].rssi);
+            MDF_LOGI("%d rssi: %d F:%d",n,wifi_sta_list.sta[0].rssi,Fuck);
             // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
         }
 

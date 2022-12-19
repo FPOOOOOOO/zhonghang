@@ -138,7 +138,7 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        //ESP_LOGI("UART Recv data:", "%c %d", data[recv_length-1],recv_length);
+        ESP_LOGI("UART Recv data:", "%s %d", data,recv_length);
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
         bzero(uart2mesh_data, recv_length + 8);
@@ -397,14 +397,14 @@ static void node_read_task(void *arg)
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
+                meshmsgtype=0;
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 7);
             }
             else if (meshmsgtype == SPI)
             {
                 printf("SPI:\n");
-                memcpy(sendbuf,mesh_data,size-7);
+                //memcpy(sendbuf,mesh_data,size-7);
             }
-            
 
             // for (int i = 0; i < len - 11; i++)
             // {
@@ -594,8 +594,8 @@ static mdf_err_t eth_init()
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
 
-    esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
-    //esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
+    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
 
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
     config.stack_input = pkt_eth2mesh;
