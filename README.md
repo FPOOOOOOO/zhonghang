@@ -519,12 +519,50 @@ eth2meshroot_0811
 ## <span id = "59">1219</span>
 1¡¢×¼±¸Ð´ÉÏÎ»»ú ºÍ GPS\
 
-## <span id = "60">1226</span>
+## <span id = "60">1225</span>
 1¡¢
 ÀÏ7ºÅ·¢£¬ÐÂBÊÕ£¬×î¿ì8-10ms
 ÐÂA·¢£¬ÀÏ6ºÅÊÕ£¬×î¿ì20ms 
 ÀÏ7ºÅ·¢£¬ÀÏ6ºÅÊÕ£¬×î¿ì20ms
 ÐÂA·¢£¬ÐÂBÊÕ£¬ºÜÂý£¬ºÜÄÑÁ¬ÉÏ\
 
+## <span id = "61">1226</span>
+1¡¢×î¿ì×é1280ºÍ64160ÒÔºó¾Í»áµô»Øµ½20ms\
+2¡¢Ê¹ÓÃiperf²âÊÔ
+2.54MBytes 9s
+~~~
+[13:38:42:363]Rx¡û?[0;32mI (39986) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   0- 3 sec  0.94 MBytes  2.51 Mbits/sec[0m
 
+[13:38:45:587]Rx¡û?[0;32mI (43210) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   3- 6 sec  0.69 MBytes  1.85 Mbits/sec[0m
 
+[13:38:48:598]Rx¡û?[0;32mI (46220) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   6- 9 sec  0.91 MBytes  2.42 Mbits/sec[0m
+
+[13:38:51:607]Rx¡û?[0;32mI (49230) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   9-12 sec  0.18 MBytes  0.49 Mbits/sec[0m
+~~~
+4.42MBytes 12s
+~~~
+[13:53:23:548]Rx¡û?[0;32mI (921150) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   0- 3 sec  1.05 MBytes  2.81 Mbits/sec[0m
+
+[13:53:26:550]Rx¡û?[0;32mI (924152) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   3- 6 sec  1.19 MBytes  3.18 Mbits/sec[0m
+
+[13:53:29:551]Rx¡û?[0;32mI (927153) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   6- 9 sec  1.19 MBytes  3.16 Mbits/sec[0m
+
+[13:53:32:616]Rx¡û?[0;32mI (930216) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   9-12 sec  0.99 MBytes  2.63 Mbits/sec[0m
+
+[13:53:35:628]Rx¡û?[0;32mI (933230) [mwifi_test, 622]: [24:4c:ab:13:52:7c]  12-15 sec  0.16 MBytes  0.44 Mbits/sec[0m
+~~~
+
+6ºÅ·¢µÄ±íÑÝ£¬ºÍ7ºÅ²î²»¶à¿ÉÒÔ¸´¿ÌÁË¡£
+~~~
+[16:43:49:760]Rx¡û?[0;32mI (24663) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   0- 3 sec  1.00 MBytes  2.68 Mbits/sec[0m
+
+[16:43:52:762]Rx¡û?[0;32mI (27665) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   3- 6 sec  0.66 MBytes  1.75 Mbits/sec[0m
+
+[16:43:55:763]Rx¡û?[0;32mI (30666) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   6- 9 sec  1.22 MBytes  3.27 Mbits/sec[0m
+
+[16:43:58:772]Rx¡û?[0;32mI (33674) [mwifi_test, 622]: [24:4c:ab:13:52:7c]   9-12 sec  0.38 MBytes  1.01 Mbits/sec[0m
+~~~
+
+## <span id = "62">1227</span>
+1¡¢×¼±¸Ð´ÉÏÎ»»ú ºÍ GPS\
+2¡¢
