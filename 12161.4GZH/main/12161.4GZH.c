@@ -406,32 +406,32 @@ static void node_read_task(void *arg)
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
-        memcpy((uint16_t *)&recv_header, data, 2);
-        memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
-        recv_header = ntohs(recv_header);
-        if (recv_header == 0xA55A)
-        {
-            // ESP_LOGI(TAG, "size is: %d", size);
-            uint8_t *mesh_data = (uint8_t *)malloc(size - 7);
-            memcpy(mesh_data, data + 8, size - 7);
-            if (meshmsgtype == UART)
-            {
-                printf("UART:\n");
-                meshmsgtype=0;
-            }
-            else if (meshmsgtype == SPI)
-            {
-                printf("SPI:\n");
-            }
-            uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 7);
+        // memcpy((uint16_t *)&recv_header, data, 2);
+        // memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
+        // recv_header = ntohs(recv_header);
+        // if (recv_header == 0xA55A)
+        // {
+        //     // ESP_LOGI(TAG, "size is: %d", size);
+        //     uint8_t *mesh_data = (uint8_t *)malloc(size - 7);
+        //     memcpy(mesh_data, data + 8, size - 7);
+        //     if (meshmsgtype == UART)
+        //     {
+        //         printf("UART:\n");
+        //         meshmsgtype=0;
+        //     }
+        //     else if (meshmsgtype == SPI)
+        //     {
+        //         printf("SPI:\n");
+        //     }
+        //     uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 7);
 
-            // for (int i = 0; i < len - 11; i++)
-            // {
-            //     printf("%c", ((char *)wifi_data)[i]);
-            // }
-            free(mesh_data);
-            // printf("\n\r");
-        }
+        //     // for (int i = 0; i < len - 11; i++)
+        //     // {
+        //     //     printf("%c", ((char *)wifi_data)[i]);
+        //     // }
+        //     free(mesh_data);
+        //     // printf("\n\r");
+        // }
 
         // if (size == 98 || size == 74)
         // {

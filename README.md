@@ -564,5 +564,17 @@ eth2meshroot_0811
 ~~~
 
 ## <span id = "62">1227</span>
-1、准备写上位机 和 GPS\
+1、看看官方iperf在参数上有哪些需要改的:
+240MHz
+Mwifi_Transmission config
+
+R-N jperf 2.7M iperf 5M
+N-R jperf 1.7M
 2、
+高速检波器，变差，怀疑门限检波
+3、
+jperf 双向 1.4G速度有问题
+TODO :
+jperf 双向 2.4G速度看一下
+jperf 提速给ZH提一套过去
+4、
