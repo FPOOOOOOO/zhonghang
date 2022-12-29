@@ -1090,7 +1090,7 @@ void app_main()
     mwifi_config_t config = {
         .channel = 13,
         .mesh_id = "123456",
-        .mesh_type = 1,
+        .mesh_type = 2,
     };
     //1 ROOT 2 NONROOT
 

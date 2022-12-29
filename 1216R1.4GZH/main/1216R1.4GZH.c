@@ -59,7 +59,6 @@ WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
 
-
 typedef struct
 {
     void *packet;
@@ -138,7 +137,7 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        ESP_LOGI("UART Recv data:", "%s %d", data,recv_length);
+        ESP_LOGI("UART Recv data:", "%s %d", data, recv_length);
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
         bzero(uart2mesh_data, recv_length + 8);
@@ -219,7 +218,6 @@ static void uart_handle_task(void *arg)
     vTaskDelete(NULL);
 }
 
-
 static void spi_task(void *pvParameters)
 {
     int n = 0;
@@ -280,7 +278,7 @@ static void spi_task(void *pvParameters)
         // ESP_LOGE(TAG, "I am 3");
         if (meshmsgtype == SPI)
         {
-            //Got SPI data from mesh into sendbuf
+            // Got SPI data from mesh into sendbuf
         }
         else
         {
@@ -355,7 +353,6 @@ static void spi_task(void *pvParameters)
     }
 }
 
-
 static void node_read_task(void *arg)
 {
     mdf_err_t ret = MDF_OK;
@@ -426,7 +423,6 @@ static void node_read_task(void *arg)
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
         }
-
     }
 
     MDF_LOGW("Node read task is exit");
@@ -594,7 +590,7 @@ static mdf_err_t eth_init()
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config);
 
-    //esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
+    // esp_eth_phy_t *phy = esp_eth_phy_new_ip101(&phy_config);
     esp_eth_phy_t *phy = esp_eth_phy_new_rtl8201(&phy_config);
 
     esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
@@ -713,11 +709,20 @@ static void hb_task(void *args)
         msg.length = sizeof(test14G);
         // uint8_t fuck =mwifi_is_started();
         // MDF_LOGI("½øÀ´ %d",fuck);
-        if (mwifi_is_started() && node_child_connected)
+        // if (mwifi_is_started() && node_child_connected)
+        // {
+        //     mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+        //     MDF_LOGI("%d", n);
+        //     // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+        // }
+
+        if (s_ethernet_is_connected)
         {
-            mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
-            MDF_LOGI("%d", n);
-            // MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
+            if (esp_eth_transmit(eth_handle, msg.packet, msg.length) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Ethernet send packet failed");
+            }
+            MDF_LOGI("ETH Heatbeading");
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -810,9 +815,9 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
     //xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }

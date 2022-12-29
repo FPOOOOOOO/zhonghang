@@ -577,4 +577,39 @@ jperf Ë«Ïò 1.4GËÙ¶ÈÓÐÎÊÌâ
 TODO :
 jperf Ë«Ïò 2.4GËÙ¶È¿´Ò»ÏÂ
 jperf ÌáËÙ¸øZHÌáÒ»Ì×¹ýÈ¥
-4¡¢
+
+4¡¢jperf 1.4G ËÙ¶È¹ý¸ß»á±¨´í
+~~~
+
+[18:26:20:942]Rx¡û?[0;33mW (114604) [mwifi, 697]: <ESP_ERR_MESH_NO_MEMORY> esp_mesh_send[0m
+[0;31mE (114623) esp.emac: no m
+
+[18:26:20:988]Rx¡û?em for receive buffer[0m
+[0;31mE (114632) esp.emac: no mem for receive buffer[0m
+[0;31mE (114634) esp.emac: no mem for receive buffer[0m
+[0;31mE (114643) esp.emac: no mem for receive buffer[0m
+
+[18:26:21:047]Rx¡û?[0;33mW (114705) [mwifi, 697]: <ESP_ERR_MESH_NO_MEMORY> esp_mesh_send[0m
+
+[18:26:21:141]Rx¡û?[0;33mW (114805) [mwifi, 697]: <ESP_ERR_MESH_NO_MEMORY> esp_mesh_send[0m
+
+[18:26:21:241]Rx¡û?[0;33mW (114905) [mwifi, 697]: <ESP_ERR_MESH_NO_MEMORY> esp_mesh_send[0m
+[0;33mW (114905) [mwifi, 707]: <ESP_ERR_MESH_NO_MEMORY> Node failed to send packets, dest_addr: 24:4c:ab:20:e9:74, flag: 0x02, opt->type: 0x08, opt->len: 13, data->tos: 0, data: 0
+
+[18:26:21:292]Rx¡û?x3ffde148, size: 1448[0m
+[0;33mW (114918) [mwifi, 806]: <ESP_ERR_MESH_NO_MEMORY> Root node failed to send packets, dest_mac: 24:4c:ab:20:e9:74[0m
+[0;33mW (114929) [mwifi, 1090]: <ESP_ERR_MESH_NO_MEMORY> mwifi_root_write, size: 1448[0m
+[0;33mW (114937) [eth2mesh, 385]: <ESP_ERR_MESH_NO_MEMORY> mwifi_read[0m
+
+[18:26:21:343]Rx¡û?[0;33mW (115005) [mwifi, 697]: <ESP_ERR_MESH_NO_MEMORY> esp_mesh_send[0m
+~~~
+
+## <span id = "63">1228</span>
+1¡¢
+~~~
+1216R1.4GZH
+12161.4GZH
+~~~
+R¡ªN jperf 3M(4M»áÅ»ÍÂ) iperf  7.84M
+N-R jperf 4M iperf  6.19M
+2¡¢
