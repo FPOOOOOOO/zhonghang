@@ -834,7 +834,7 @@ static esp_err_t initialize_flow_control(void)
         return ESP_FAIL;
     }
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+1,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
     // if (ret != pdTRUE)
@@ -904,7 +904,7 @@ void app_main()
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+2,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
