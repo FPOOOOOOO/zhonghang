@@ -625,4 +625,14 @@ R——N
 老板子<——新板子 
 新板子——>老板子 M \
 2、以太网部分改成SR8201F向ESP提供时钟，这样子ESP容易进入下载模式，但是100M的时候PING比较稳定（R40换成22欧姆）\
-3、
+
+## <span id = "64">1230</span>
+1、调试过程见纸张\
+2、个人认为如果跑在单核上，还是只能对半，因为看到了mesh的 stack和wifi的不一样\
+
+## <span id = "65">1231</span>
+1、还能尝试的方向：
+- 研究一下windows size
+- try一下跑在不同的核上
+- 这个网友的很多建议可以尝试 https://github.com/espressif/esp-mdf/issues/301
+
