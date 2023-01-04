@@ -777,6 +777,9 @@ void app_main()
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
     MDF_ERROR_ASSERT(mwifi_start());
 
+        /* uart initialization */
+    MDF_ERROR_ASSERT(uart_initialize());
+
     /**
      * @brief select/extend a group memebership here
      *      group id can be a custom address
@@ -814,8 +817,8 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    //xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
+    //            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
     // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 

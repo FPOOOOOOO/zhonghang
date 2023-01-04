@@ -637,4 +637,5 @@ R——N
 - 这个网友的很多建议可以尝试 https://github.com/espressif/esp-mdf/issues/301
 
 ## <span id = "65">0103</span>
-1、
+1、直连的AP和STA 差不多8-13M徘徊，没有0%过，总流量高计算出来的也高。然后AP ping STA时延高、STA ping AP 时延低（和github上的issue一样
+2、?有点问题，flash没设置,但是ETH2AP
