@@ -638,4 +638,9 @@ R——N
 
 ## <span id = "65">0103</span>
 1、直连的AP和STA 差不多8-13M徘徊，没有0%过，总流量高计算出来的也高。然后AP ping STA时延高、STA ping AP 时延低（和github上的issue一样
-2、?有点问题，flash没设置,但是ETH2AP
+2、?有点问题，flash没设置,但是ETH2AP官方例程也没设置\
+
+## <span id = "66">0104</span>
+1、task在不同的core上，好像效果会变差。task在不同的core相同优先级>不同优先级。task在同一个core上开了使用两个core会变差\
+2、IRAM 已经都开启了\
+3、iperf 跑双核没什么区别（本来就只有一个task）
