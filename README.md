@@ -644,3 +644,7 @@ R——N
 1、task在不同的core上，好像效果会变差。task在不同的core相同优先级>不同优先级。task在同一个core上开了使用两个core会变差\
 2、IRAM 已经都开启了\
 3、iperf 跑双核没什么区别（本来就只有一个task）
+
+## <span id = "67">0105</span>
+1、测试一下Tx prior和RX prior的,好像有用又好像没用，没有很多可复现性\
+2、xon_size还是有帮助的，具体参考纸上\
