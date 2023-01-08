@@ -78,19 +78,20 @@ typedef struct
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
 
-static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, void *buffer, uint8_t *CRCpackage)
+static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, uint8_t addr,void *buffer, uint8_t *CRCpackage)
 {
     // uint8_t *newpackage = (uint8_t *)malloc(len + 9);
     // bzero(newpackage, len + 9);
-    bzero(CRCpackage, len + 7);
+    bzero(CRCpackage, len + 8);
     CRCpackage[0] = header >> 8;
     CRCpackage[1] = header;
     // memcpy(newpackage, header, 2); // header
     CRCpackage[2] = type; // type
     CRCpackage[3] = len >> 8;
     CRCpackage[4] = len; // len
-    CRCpackage[5] = diy >> 8;
-    CRCpackage[6] = diy;                 // len
+    CRCpackage[5] = addr; // addr
+    CRCpackage[6] = diy >> 8;
+    CRCpackage[7] = diy;                 // len
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 
@@ -112,7 +113,7 @@ static mdf_err_t uart_initialize()
     return MDF_OK;
 }
 
-static void uart_handle_task(void *arg)
+static void uart_task(void *arg)
 {
     int recv_length = 0;
     mdf_err_t ret = MDF_OK;
@@ -135,7 +136,7 @@ static void uart_handle_task(void *arg)
     esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
 
     /* uart initialization */
-    MDF_ERROR_ASSERT(uart_initialize());
+    //MDF_ERROR_ASSERT(uart_initialize());
 
     while (1)
     {
@@ -274,7 +275,6 @@ static void spi_task(void *pvParameters)
     // ESP_LOGE(TAG, "I am 1");
     //  WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 
-
     //WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
     uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
 
@@ -342,8 +342,8 @@ static void spi_task(void *pvParameters)
         
         //printf(" SPIlength: %d\n",SPIlength);
 
-        uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 7);
-        bzero(spi2mesh_data, SPIlength + 7);
+        uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 8);
+        bzero(spi2mesh_data, SPIlength + 8);
 
         hjypackup(SPI, SPIlength, 0, recvbuf, spi2mesh_data);
 
@@ -922,7 +922,7 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    //xTaskCreate(uart_handle_task, "uart_handle_task", 4 * 1024,
+    //xTaskCreate(uart_handle_task, "uart_task", 4 * 1024,
     //            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
