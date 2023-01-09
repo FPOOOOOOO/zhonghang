@@ -142,7 +142,7 @@ static void uart_task(void *arg)
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
         bzero(uart2mesh_data, recv_length + 8);
-        hjypackup(UART, recv_length, 0, data, uart2mesh_data);
+        hjypackup(UART, recv_length, 0,0, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
         flow_control_msg_t msg = {
@@ -330,7 +330,7 @@ static void spi_task(void *pvParameters)
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 8);
         bzero(spi2mesh_data, SPIlength + 8);
 
-        hjypackup(SPI, SPIlength, 0, recvbuf, spi2mesh_data);
+        hjypackup(SPI, SPIlength, 0,0, recvbuf, spi2mesh_data);
 
         esp_err_t ret = ESP_OK;
 
@@ -385,37 +385,35 @@ static void node_read_task(void *arg)
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
-        // memcpy((uint16_t *)&recv_header, data, 2);
-        // recv_header = ntohs(recv_header);
-        // if (recv_header == 0xA55A)
-        // {
-        //     //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
-        //     //ESP_LOGI(TAG, "size is: %d", size);
-        // memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
-        //     uint8_t *mesh_data = (uint8_t *)malloc(size - 8);
-        //     memcpy(mesh_data, data + 8, size - 8);
-        //     if (meshmsgtype == UART)
-        //     {
-        //         printf("UART:\n");
-        //         meshmsgtype=0;
-        //         uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
-        //     }
-        //     else if (meshmsgtype == SPI)
-        //     {
-        //         printf("SPI:\n");
-        //         memcpy(sendbuf,mesh_data,size-8);
-        //     }
+        memcpy((uint16_t *)&recv_header, data, 2);
+        recv_header = ntohs(recv_header);
+        if (recv_header == 0xA55A)
+        {
+            //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
+            //ESP_LOGI(TAG, "size is: %d", size);
+            memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
+            uint8_t *mesh_data = (uint8_t *)malloc(size - 8);
+            memcpy(mesh_data, data + 8, size - 8);
+            if (meshmsgtype == UART)
+            {
+                printf("UART:\n");
+                meshmsgtype=0;
+                uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
+            }
+            else if (meshmsgtype == SPI)
+            {
+                printf("SPI:\n");
+                memcpy(sendbuf,mesh_data,size-8);
+            }
 
-        //     // for (int i = 0; i < len - 11; i++)
-        //     // {
-        //     //     printf("%c", ((char *)wifi_data)[i]);
-        //     // }
-        //     free(mesh_data);
-        //     // printf("\n\r");
-        // }
-
-        /* forwoad to eth */
-        if (s_ethernet_is_connected)
+            // for (int i = 0; i < len - 11; i++)
+            // {
+            //     printf("%c", ((char *)wifi_data)[i]);
+            // }
+            free(mesh_data);
+            // printf("\n\r");
+        }
+        else if(s_ethernet_is_connected)        /* forwoad to eth */
         {
             if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
             {
@@ -821,8 +819,8 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    //xTaskCreate(uart_handle_task, "uart_task", 4 * 1024,
-    //            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    xTaskCreate(uart_task, "uart_task", 4 * 1024,
+               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
     // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
