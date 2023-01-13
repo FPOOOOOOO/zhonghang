@@ -655,4 +655,4 @@ R——N
 3、室内 7R5N，同轴线RSSI -33，R-N 1M没问题，ping+jperf 10ms；N-R 只有0.6M，ping+jperf 200+ms 有send flow fail\
 4、直天线，RSSI-27，R-N 1M没问题，ping+jperf 10+ms 有几个100+ms；N-R，0.3M、0.8M、1M都有，复现性比较差，ping+jperf 请求超时，没有send flow fail。加了一个10dB的衰减，从-27到-70了\
 5、8号认证通不过、6号连不上、5号、10号、B都有一次或两次到过1M，然后其余是不稳定丢包，5号在稳定后还是挺稳定的。
-6、10号和5号是老版型；10号同轴线，RSSI-36——ping：8ms，ping+Jperf 上行：1M 25+ms（好的时候ms不增加）下行：0.5M；5号同轴线，RSSI-27——ping：7ms，ping+Jperf 上行：1M 20+ms（2次），后面就变成0.7M（400+ms）下行：0.3M；5号加10dB衰减，RSSI-38——ping 8ms，ping+Jperf 上行：自从变成0.7M以后就一直没回去。
+6、10号和5号是老版型；10号同轴线，RSSI-36——ping：8ms，ping+Jperf 上行：1M 25+ms（好的时候ms不增加）下行：0.5M；5号同轴线，RSSI-27——ping：7ms，ping+Jperf 上行：1M 20+ms（2次），后面就变成0.7M（400+ms）下行：0.3M；5号加10dB衰减，RSSI-38——ping 8ms，ping+Jperf 上行：自从变成0.7M以后就一直没回去。总结：10号上行比5号稳定，3号上行最稳定；下行3号、10号、5号都有点问题。
