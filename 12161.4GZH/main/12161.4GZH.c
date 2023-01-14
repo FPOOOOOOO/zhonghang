@@ -417,7 +417,7 @@ static void node_read_task(void *arg)
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
-                //uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
+                uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
                 meshmsgtype=0;
             }
             else if (meshmsgtype == SPI)
@@ -921,8 +921,8 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    // xTaskCreate(uart_task, "uart_task", 4 * 1024,
-    //            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    xTaskCreate(uart_task, "uart_task", 4 * 1024,
+               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 }

@@ -138,7 +138,7 @@ static void uart_task(void *arg)
             continue;
         }
 
-        ESP_LOGI("UART Recv data:", "%s %d", data, recv_length);
+        //ESP_LOGI("UART Recv data:", "%s %d", data, recv_length);
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
         bzero(uart2mesh_data, recv_length + 8);
