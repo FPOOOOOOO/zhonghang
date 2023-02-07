@@ -14,6 +14,7 @@
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
 // 1124: 2.4G可用版，上行和SPI待优化。
+// 0131: 增加IO17用来缓启8201
 
 #include "mdf_common.h"
 #include "mwifi.h"

@@ -126,13 +126,9 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
   uint32_t temp;     
   float rs;  
   
-  p1 = (uint8_t*)strstr((const char *)buf,"GNRMC"); //GNSS
-  if(p1 == NULL)
-  {
-    p1=(uint8_t*)strstr((const char *)buf,"GPRMC");//"$GPRMC",经常有&和GPRMC分开的情况,故只判断GPRMC.
-  }
+  p1 = (uint8_t*)strstr((const char *)buf,"GNGLL"); //GNGLL
   
-  posx=NMEA_Comma_Pos(p1, 1);                //得到UTC时间  hhmmss.ss
+  posx=NMEA_Comma_Pos(p1, 5);                //得到UTC时间  hhmmss.ss
   if(posx!=0XFF)
   {
     temp=NMEA_Str2num(p1+posx,&dx)/NMEA_Pow(10,dx);     //得到UTC时间,去掉ms
@@ -141,7 +137,7 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
     gpsx->utc.sec=temp%100;      
   }
   
-  posx=NMEA_Comma_Pos(p1,2);/*判断RMC数据状态,A=数据有效 V=数据无效*/  
+  posx=NMEA_Comma_Pos(p1,6);/*判断RMC数据状态,A=数据有效 V=数据无效*/  
   if(posx!=0XFF)
   {
     uint8_t* p2=(uint8_t*)strstr((const char *)(p1+posx), "A");
@@ -151,7 +147,7 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
     }
   }
   
-  posx=NMEA_Comma_Pos(p1,3);                //得到纬度 ddmm.mmmm
+  posx=NMEA_Comma_Pos(p1,1);                //得到纬度 ddmm.mmmm
   if(posx!=0XFF)
   {
     temp=NMEA_Str2num(p1+posx,&dx);        
@@ -159,11 +155,11 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
     rs=temp%NMEA_Pow(10,dx+2);        //得到'     
     gpsx->latitude=gpsx->latitude*NMEA_Pow(10,5)+(rs*NMEA_Pow(10,5-dx))/60;//转换为° 
   }
-  posx=NMEA_Comma_Pos(p1,4);                //南纬还是北纬 
+  posx=NMEA_Comma_Pos(p1,2);                //南纬还是北纬 
   if(posx!=0XFF)
     gpsx->nshemi=*(p1+posx);           
    
-  posx=NMEA_Comma_Pos(p1,5);                //得到经度 dddmm.mmmm
+  posx=NMEA_Comma_Pos(p1,3);                //得到经度 dddmm.mmmm
   if(posx!=0XFF)
   {                          
     temp=NMEA_Str2num(p1+posx,&dx);        
@@ -171,23 +167,23 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
     rs=temp%NMEA_Pow(10,dx+2);        //得到'     
     gpsx->longitude=gpsx->longitude*NMEA_Pow(10,5)+(rs*NMEA_Pow(10,5-dx))/60;//转换为° 
   }
-  posx=NMEA_Comma_Pos(p1,6);                //东经还是西经
+  posx=NMEA_Comma_Pos(p1,4);                //东经还是西经
   if(posx!=0XFF)
     gpsx->ewhemi=*(p1+posx);  
    
-  posx=NMEA_Comma_Pos(p1,8);                //得到方位 度
-  if(posx!=0XFF)
-  {                          
-    temp=NMEA_Str2num(p1+posx,&dx);        
-    gpsx->course = temp*10;                
-  }
+  // posx=NMEA_Comma_Pos(p1,8);                //得到方位 水平精确度
+  // if(posx!=0XFF)
+  // {                          
+  //   temp=NMEA_Str2num(p1+posx,&dx);        
+  //   gpsx->course = temp*10;                
+  // }
   
-  posx=NMEA_Comma_Pos(p1, 9);                //得到UTC日期 ddmmyy
-  if(posx!=0XFF)
-  {
-    temp=NMEA_Str2num(p1+posx, &dx);         
-    gpsx->utc.date  = temp/10000;
-    gpsx->utc.month = (temp/100)%100;
-    gpsx->utc.year  = 2000+temp%100;      
-  } 
+  // posx=NMEA_Comma_Pos(p1, 9);                //得到UTC日期 ddmmyy
+  // if(posx!=0XFF)
+  // {
+  //   temp=NMEA_Str2num(p1+posx, &dx);         
+  //   gpsx->utc.date  = temp/10000;
+  //   gpsx->utc.month = (temp/100)%100;
+  //   gpsx->utc.year  = 2000+temp%100;      
+  // } 
 }

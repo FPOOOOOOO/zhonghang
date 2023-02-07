@@ -14,6 +14,7 @@
 // 0805: combine eth2ap into this
 // 0827: 规范了N&R发送形式
 // 1124: 2.4G 可用版本，SPI有些许问题
+// 0131: 增加IO17用来缓启8201
 
 #include "mdf_common.h"
 #include "mwifi.h"
@@ -746,6 +747,7 @@ void app_main()
      */
     esp_log_level_set("*", ESP_LOG_INFO);
     esp_log_level_set(TAG, ESP_LOG_DEBUG);
+
 
     /**
      * @brief Initialize wifi mesh.
