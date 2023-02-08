@@ -726,6 +726,7 @@ static mdf_err_t eth_init()
     // esp_netif_t *eth_netif = esp_netif_new(&eth_cfg);
     // MDF_ERROR_ASSERT(esp_eth_set_default_handlers(eth_netif));
 
+
     MDF_ERROR_ASSERT(esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, NULL));
     // MDF_ERROR_ASSERT(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &ip_event_handler, NULL));
 
@@ -882,6 +883,10 @@ void app_main()
     SetFreq(F);
     SetFreq(F);
     SetFreq(F);
+
+    SR8201_H;
+    SR8201_H;
+    SR8201_H;
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());

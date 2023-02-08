@@ -1,33 +1,6 @@
 //1216 FPO
 #include "1.4G.h"
 
-#define GPIO_OUTPUT_IO_0 25 // SPI?_CLK（IO32） SPI_MOSI（IO2）  SPINSS(IO16)
-#define GPIO_OUTPUT_IO_1 16 // NSS
-#define GPIO_OUTPUT_IO_2 2  // MOSI
-#define GPIO_OUTPUT_IO_3 32 // CLK
-
-#define GPIO_OUTPUT_8201 17 //8201 boot later
-
-#define GPIO_OUTPUT_PIN_SEL ((1ULL << GPIO_OUTPUT_IO_0) | (1ULL << GPIO_OUTPUT_IO_1) | (1ULL << GPIO_OUTPUT_IO_2) | (1ULL << GPIO_OUTPUT_IO_3)| (1ULL << GPIO_OUTPUT_8201))
-#define GPIO_INPUT_IO_0 34
-#define GPIO_INPUT_IO_1 5
-#define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
-#define ESP_INTR_FLAG_DEFAULT 0
-
-#define ADF_CE_Set (gpio_set_level(GPIO_OUTPUT_IO_0, 1))
-#define ADF_CE_Clr (gpio_set_level(GPIO_OUTPUT_IO_0, 0))
-
-#define ADF_LE_Set (gpio_set_level(GPIO_OUTPUT_IO_1, 1))
-#define ADF_LE_Clr (gpio_set_level(GPIO_OUTPUT_IO_1, 0))
-
-#define ADF_DATA_Set (gpio_set_level(GPIO_OUTPUT_IO_2, 1))
-#define ADF_DATA_Clr (gpio_set_level(GPIO_OUTPUT_IO_2, 0))
-
-#define ADF_CLK_Set (gpio_set_level(GPIO_OUTPUT_IO_3, 1))
-#define ADF_CLK_Clr (gpio_set_level(GPIO_OUTPUT_IO_3, 0))
-
-#define SR8201_H (gpio_set_level(GPIO_OUTPUT_8201, 1))
-#define SR8201_L (gpio_set_level(GPIO_OUTPUT_8201, 0))
 
 static xQueueHandle gpio_evt_queue = NULL;
 uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
@@ -106,6 +79,10 @@ void GPIO_INIT(void)
     // gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void *)GPIO_INPUT_IO_0);
 
     printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
+
+    SR8201_L;
+    SR8201_L;
+    SR8201_L;
 }
 
 //-----------------------------------------------------------------
