@@ -880,13 +880,13 @@ void app_main()
     ADF4351_Init(F);
     ESP_LOGI(TAG, "I am here2");
     int cnt = 0;
+    SR8201_H;
+    SR8201_H;
+    SR8201_H;
     SetFreq(F);
     SetFreq(F);
     SetFreq(F);
 
-    SR8201_H;
-    SR8201_H;
-    SR8201_H;
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
