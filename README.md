@@ -673,8 +673,8 @@ R——N
 2、GPIO17 设置为Output模式以后，Download 0.7V，什么都不写正常工作1.9V，拉高以后3.3V，拉低以后1.9V。
 
 ## <span id = "72">0208</span>
-1、要加一个ESP32_EN和8201 RST之间的二极管
-2、mesh一直重启以后
+1、要加一个ESP32_EN和8201 RST之间的二极管\
+2、mesh一直重启以后\
 ~~~
 I (639600) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0, look_for_nwk_count:0
 I (643513) mesh: [FIND][ch:0]AP:7, otherID:0, MAP:0, idle:0, candidate:0, root:0[00:00:00:00:00:00][FIXED-ROOT]
@@ -682,5 +682,20 @@ I (643513) mesh: [FIND:158]fail to find a network, channel:0, cfg<channel:13, ro
 
 I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0, look_for_nwk_count:0
 ~~~
-3、10号和8号SR8201在RST的时候是IO0是3.3V，剩下两块在RST的时候IO0是0V
+3、10号和8号SR8201在RST的时候是IO0是3.3V，剩下两块在RST的时候IO0是0V\
+4、想办法在8201时钟线路上拉高对于IO0管脚的电平\
 
+## <span id = "73">0209</span>
+1、室内+10dB衰减 RSSI -33 \
+2、不加衰减 连不上（天线问题）
+加3dB衰减 连上无法通讯（天线问题）
+50m -52 ping 2000ms 
+加10dB衰减（10dB衰减器和天线连接紧密）
+1.8m -33 能自己连上 ping正常
+34m -55 能自己连上
+50m -64 能自己连上
+两端3dB 
+50m -50
+25m -47 -59跳变
+3、36M，6dB -51 —— -57 jperf 0.25M
+4、
