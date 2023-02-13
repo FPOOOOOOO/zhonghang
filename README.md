@@ -698,4 +698,17 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 50m -50
 25m -47 -59跳变
 3、36M，6dB -51 —— -57 jperf 0.25M
-4、
+
+## <span id = "73">0210</span>
+1、
+室外+6dB衰减
+50 -50
+100 -61
+140 -71 -65 -66
+去掉6dB衰减
+230 没有6dB衰减 -62 
+2、基本都能够自己连上，但是还有reason201的报错，也有b0 auth没通过，还有一堆WRNRX的报错
+
+## <span id = "74">0213</span>
+1、ZH乔工说这个项目，这个月要调试完\
+2、
