@@ -711,4 +711,18 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 
 ## <span id = "74">0213</span>
 1、ZH乔工说这个项目，这个月要调试完\
-2、
+2、测试5、6、10的速度\
+3、
+5R10N 几乎连不上，连上ping也很差，200ms+，室内2mRSSI-73\
+5R6N 连得上，室内RSSI-68，ping在14ms左右，jperf速度:0.2M\
+10R 6N  连得上 RSSI -78 ping 9ms jperf：几乎发不出去\
+
+## <span id = "75">0214</span>
+1、3R7N 36m 10dB rssi -45-52 ping 5ms jperf 3.7M  \
+2、3R7N 50m 10dB rssi -56-64\
+3、3R7N 36m 20dB -51 ping 15ms jperf 0.1M\
+4、3R7N 36m 15dB -47-50 ping 15ms jperf 一开始1.8M 后来0.3M\
+5、3R7N 36m 12dB -54 ping 15ms jperf 3.7M\
+
+## <span id = "76">0215</span>
+1、
