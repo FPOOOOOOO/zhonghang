@@ -69,7 +69,7 @@ typedef struct
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
 
-static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, uint8_t addr,void *buffer, uint8_t *CRCpackage)
+static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t addr,void *buffer, uint8_t *CRCpackage)
 {
     // uint8_t *newpackage = (uint8_t *)malloc(len + 9);
     // bzero(newpackage, len + 9);
@@ -80,9 +80,9 @@ static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, uint8_t addr,voi
     CRCpackage[2] = type; // type
     CRCpackage[3] = len >> 8;
     CRCpackage[4] = len; // len
-    CRCpackage[5] = addr; // addr
-    CRCpackage[6] = diy >> 8;
-    CRCpackage[7] = diy;                 // len
+    CRCpackage[5] = addr>> 8; // addr
+    CRCpackage[6] = addr;
+    CRCpackage[7] = rssi;                 // len
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 

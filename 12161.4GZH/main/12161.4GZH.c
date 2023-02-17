@@ -51,6 +51,11 @@ uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0};
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
+
+static uint16_t pkg_addr=0;//广播包的地址
+static uint8_t ifmyaddr=0;//0=不是自己的包
+static uint8_t NonRootID = 7;//本机的编号
+
 #define UART (uint8_t)4
 #define SPI (uint8_t)7
 static uint8_t meshmsgtype = 0;
@@ -79,7 +84,8 @@ typedef struct
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
 
-static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, uint8_t addr,void *buffer, uint8_t *CRCpackage)
+// mesh消息报头
+static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t addr,void *buffer, uint8_t *CRCpackage)
 {
     // uint8_t *newpackage = (uint8_t *)malloc(len + 9);
     // bzero(newpackage, len + 9);
@@ -90,11 +96,12 @@ static void hjypackup(uint8_t type, uint16_t len, uint16_t diy, uint8_t addr,voi
     CRCpackage[2] = type; // type
     CRCpackage[3] = len >> 8;
     CRCpackage[4] = len; // len
-    CRCpackage[5] = addr; // addr
-    CRCpackage[6] = diy >> 8;
-    CRCpackage[7] = diy;                 // len
+    CRCpackage[5] = addr>> 8; // addr
+    CRCpackage[6] = addr;
+    CRCpackage[7] = rssi;                
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
+
 
 /**
  * @brief uart initialization
@@ -352,7 +359,7 @@ static void spi_task(void *pvParameters)
 
         flow_control_msg_t msg = {
             .packet = spi2mesh_data,
-            .length = SPIlength + 7};
+            .length = SPIlength + 8};
         if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
         {
             // printf("eth2wifi is here:%s**********\n\r",buffer);
@@ -407,12 +414,17 @@ static void node_read_task(void *arg)
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
+        memcpy((uint8_t *)&pkg_addr, data + 5, 2);
+        ifmyaddr=pkg_addr & (1<<(NonRootID-1));
+
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
-        if (recv_header == 0xA55A)
+        
+        if (recv_header == 0xA55A && (pkg_addr ==0 || ifmyaddr >0 ))
         {
             // ESP_LOGI(TAG, "size is: %d", size);
             memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
+            memcpy((uint8_t *)&pkg_addr, data + 5, 2);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 8);
             memcpy(mesh_data, data + 8, size - 8);
             if (meshmsgtype == UART)

@@ -725,4 +725,8 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 5、3R7N 36m 12dB -54 ping 15ms jperf 3.7M\
 
 ## <span id = "76">0215</span>
-1、
+1、LO改到3.9G，天线1.43G，mesh频道改到12\
+2、3R7N 36m 12dB -59 ping 100+ms jperf 0.13M (两个准天线)\
+3、不准天线更好\
+4、两块新老之间，新的效果 L> B > 8，老的3R7N目前都没问题（3M），8号目前连不上。新的LRBN，可以连上（2M），L和老的能到3，B和老的只能到2M。
+5、天线S11反射指标 \
