@@ -730,3 +730,8 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 3、不准天线更好\
 4、两块新老之间，新的效果 L> B > 8，老的3R7N目前都没问题（3M），8号目前连不上。新的LRBN，可以连上（2M），L和老的能到3，B和老的只能到2M。
 5、天线S11反射指标 \
+
+## <span id = "76">0217</span>
+1、从机第一次遇到:Haven't to connect to a suitable AP now!\
+2、主机遇到：[22:27:17:197]Rx←?Guru Meditation Error: Core  0 panic'ed (LoadStoreError). Exception was unhandled.
+3、

@@ -47,6 +47,28 @@ WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
+static uint16_t NonRootID=0; //判断消息是从哪儿过来的
+static int8_t NonRootRssi=0; 
+
+static uint8_t hb_RorN = 0; //主从
+static uint8_t hb_NonRootID = 0;//本机的编号
+static uint8_t hb_layer = 1;//第二层
+static uint8_t hb_MorS = 1; //Slave
+static uint32_t hb_SPIclk = 8000000;//8M
+static uint32_t hb_BaudRate = 115200;
+static uint16_t hb_Freq = 1400;//1400M
+static uint16_t hb_Route =0;//boardcast
+//
+typedef struct {
+    uint8_t Connected;    
+    int8_t rssi;    
+    uint8_t ifeth;
+    uint8_t ifspi;
+    uint8_t ifuart;    
+} Nonroot_info;
+
+Nonroot_info hb_Ninfo[16];
+
 #define UART (uint8_t)4
 #define SPI (uint8_t)7
 static uint8_t meshmsgtype = 0;
@@ -56,7 +78,14 @@ static uint8_t meshmsgtype = 0;
 #define GPIO_MISO 12 // 13
 #define GPIO_SCLK 14 // 15
 #define GPIO_CS 15   // 14 SPI for ESP
-WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
+
+// uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
+// uint8_t *sendbuf = (uint8_t *)MDF_MALLOC(129);
+
+static uint8_t recvbuf[129];
+static uint8_t sendbuf[129];
+
+//WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
 
@@ -69,7 +98,7 @@ typedef struct
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
 
-static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t addr,void *buffer, uint8_t *CRCpackage)
+static void hjypackup(uint8_t type, uint16_t len, int8_t diy, uint16_t route,void *buffer, uint8_t *CRCpackage)
 {
     // uint8_t *newpackage = (uint8_t *)malloc(len + 9);
     // bzero(newpackage, len + 9);
@@ -80,9 +109,9 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t addr,voi
     CRCpackage[2] = type; // type
     CRCpackage[3] = len >> 8;
     CRCpackage[4] = len; // len
-    CRCpackage[5] = addr>> 8; // addr
-    CRCpackage[6] = addr;
-    CRCpackage[7] = rssi;                 // len
+    CRCpackage[5] = route>> 8; // route
+    CRCpackage[6] = route;
+    CRCpackage[7] = diy;                 
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 
@@ -266,11 +295,13 @@ static void spi_task(void *pvParameters)
 
     // ESP_LOGE(TAG, "I am 1");
     //  WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
-    WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
-    memset(recvbuf, 0, 33);
+    //WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
+
+    //memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
-    memset(recvbuf, 0x23, 129);
+    memset(recvbuf, 0, 129);
+    memset(sendbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
 
     while (1)
@@ -278,20 +309,21 @@ static void spi_task(void *pvParameters)
         // Clear receive buffer, set send buffer to something sane
         // memset(recvbuf, 0xA5, 129);
         // ESP_LOGE(TAG, "I am 3");
-        if (meshmsgtype == SPI)
-        {
-            // Got SPI data from mesh into sendbuf
 
-            meshmsgtype=0;
-        }
-        else
-        {
-            int res = sprintf(sendbuf, "Htis is from Root, number %04d.", n);
-            if (res >= sizeof(sendbuf))
-            {
-                printf("Data truncated\n");
-            }
-        }
+        // if (meshmsgtype == SPI)
+        // {
+        //     // Got SPI data from mesh into sendbuf
+
+        //     meshmsgtype=0;
+        // }
+        // else
+        // {
+        //     int res = sprintf(sendbuf, "Htis is from Root, number %04d.", n);
+        //     if (res >= sizeof(sendbuf))
+        //     {
+        //         printf("Data truncated\n");
+        //     }
+        // }
 
         // ESP_LOGE(TAG, "I am 4");
         //  Set up a transaction of 128 bytes to send/receive
@@ -311,6 +343,7 @@ static void spi_task(void *pvParameters)
         ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
         // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
+        memset(sendbuf, 0, 129);
         // esp_err_t ret;
         // spi_slave_transaction_t *ret_trans;
         // ToDo: check if any spi transfers in flight
@@ -327,7 +360,14 @@ static void spi_task(void *pvParameters)
         // received data from the master. Print it.
         printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
-        uint8_t SPIlength = sizeof(recvbuf);
+        uint8_t SPIlength = 0;
+
+        for(int i=0;i<129;i++){
+            if(recvbuf[i]==0) {
+                SPIlength=i+1;
+                break;
+            }
+        }
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 8);
         bzero(spi2mesh_data, SPIlength + 8);
 
@@ -337,7 +377,7 @@ static void spi_task(void *pvParameters)
 
         flow_control_msg_t msg = {
             .packet = spi2mesh_data,
-            .length = SPIlength + 7};
+            .length = SPIlength + 8};
         if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
         {
             // printf("eth2wifi is here:%s**********\n\r",buffer);
@@ -355,6 +395,9 @@ static void spi_task(void *pvParameters)
             n = 0;
         }
     }
+    MDF_LOGI("SPI task is exit");
+
+    vTaskDelete(NULL);
 }
 
 static void node_read_task(void *arg)
@@ -388,6 +431,15 @@ static void node_read_task(void *arg)
 
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
+
+        // memcpy((uint16_t *)&NonRootID, data + 5, 2);
+        // NonRootID=ntohs(NonRootID);
+
+        // memcpy((int8_t *)&NonRootRssi, data + 7, 1);
+
+        // hb_Ninfo[NonRootID-1].Connected=NonRootID; //截取后八位
+        // hb_Ninfo[NonRootID-1].rssi=NonRootRssi;
+
         if (recv_header == 0xA55A)
         {
             //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
@@ -395,16 +447,20 @@ static void node_read_task(void *arg)
             memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 8);
             memcpy(mesh_data, data + 8, size - 8);
+            
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
-                meshmsgtype=0;
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
+                //hb_Ninfo[NonRootID-1].ifuart=1;
+                meshmsgtype=0;
             }
             else if (meshmsgtype == SPI)
             {
                 printf("SPI:\n");
-                memcpy(sendbuf,mesh_data,size-8);
+                //memcpy(sendbuf,mesh_data,size-8);
+                //hb_Ninfo[NonRootID-1].ifspi=1;
+                meshmsgtype=0;
             }
 
             // for (int i = 0; i < len - 11; i++)
@@ -416,6 +472,7 @@ static void node_read_task(void *arg)
         }
         else if(s_ethernet_is_connected)        /* forwoad to eth */
         {
+            //hb_Ninfo[NonRootID-1].ifeth=1; //要确认一下这个
             if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
@@ -703,13 +760,38 @@ static void hb_task(void *args)
     // uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
     flow_control_msg_t msg;
     // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
+    uint8_t *hb_msg = (uint8_t *)malloc(100);
+    memset(hb_msg, 0, 100);
 
     for (;;)
     {
         data_type.group = true;
-        sprintf(test14G, "ROOTHB number %04d.", n);
-        msg.packet = test14G;
-        msg.length = sizeof(test14G);
+        // sprintf(test14G, "ROOTHB number %04d.", n);
+        hb_msg[0]=hb_RorN;
+        hb_msg[1]=hb_NonRootID;
+        hb_msg[2]=hb_layer;
+        hb_msg[3]=hb_MorS;
+        hb_msg[4]=hb_SPIclk>>24;
+        hb_msg[5]=hb_SPIclk>>16;
+        hb_msg[6]=hb_SPIclk>>8;
+        hb_msg[7]=hb_SPIclk;
+        hb_msg[8]=hb_BaudRate>>24;
+        hb_msg[9]=hb_BaudRate>>16;
+        hb_msg[10]=hb_BaudRate>>8;
+        hb_msg[11]=hb_BaudRate;
+        hb_msg[12]=hb_Freq>>8;
+        hb_msg[13]=hb_Freq;
+        hb_msg[14]=hb_Route>>8;
+        hb_msg[15]=hb_Route;
+        for(int i=0;i<16;i++){
+            hb_msg[15+i*5]=hb_Ninfo[i].Connected;
+            hb_msg[16+i*5]=hb_Ninfo[i].rssi;
+            hb_msg[17+i*5]=hb_Ninfo[i].ifeth;
+            hb_msg[18+i*5]=hb_Ninfo[i].ifspi;
+            hb_msg[19+i*5]=hb_Ninfo[i].ifuart;
+        }
+        msg.packet = hb_msg;
+        msg.length = 100;
         // uint8_t fuck =mwifi_is_started();
         // MDF_LOGI("进来 %d",fuck);
         // if (mwifi_is_started() && node_child_connected)
@@ -725,7 +807,15 @@ static void hb_task(void *args)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
-            MDF_LOGI("ETH Heatbeading");
+            // MDF_LOGI("ETH Heatbeading");
+        }
+
+        for(int i=0;i<16;i++){
+            hb_Ninfo[i].Connected=0;
+            hb_Ninfo[i].rssi=0;
+            hb_Ninfo[i].ifeth=0;
+            hb_Ninfo[i].ifspi=0;
+            hb_Ninfo[i].ifuart=0;
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
