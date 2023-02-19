@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "1.4G.h"
+#include "GPS.h"
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -66,8 +67,8 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_NonRootID = 7;     // 本机的编号
-static uint8_t hb_layer = 2;         // 第二层
+static uint8_t hb_ID = 7;     // 本机的编号
+static uint8_t hb_Layer = 2;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M
 static uint32_t hb_BaudRate = 115200;
@@ -127,6 +128,18 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t connecte
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 
+static void hjyctrl(void *buffer,uint16_t len){
+    //for now lack route
+    uint8_t *data;
+    data=(uint8_t *)buffer;
+    hb_RorN = data[0]; //主从
+    hb_ID =  data[1];//本机的编号
+    hb_MorS =  data[2]; //Slave
+    hb_Freq =  data[3]<<8 &  data[4];
+    hb_SPIclk =  data[5]<<24 & data[6]<<16 &  data[7]<<8 & data[8];//8M
+    hb_BaudRate =  data[9]<<24 &  data[10]<<16 &  data[11]<<8 & data[12];
+}
+
 /**
  * @brief uart initialization
  */
@@ -184,7 +197,7 @@ static void uart_task(void *arg)
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8); // 容纳字符串最后一位
         bzero(uart2mesh_data, recv_length + 8);                       // 容纳字符串
-        hjypackup(UART, recv_length, rssi, hb_NonRootID, data, uart2mesh_data);
+        hjypackup(UART, recv_length, rssi, hb_ID, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
         flow_control_msg_t msg = {
@@ -390,7 +403,7 @@ static void spi_task(void *pvParameters)
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 8);
         bzero(spi2mesh_data, SPIlength + 8);
 
-        hjypackup(SPI, SPIlength, rssi, hb_NonRootID, recvbuf, spi2mesh_data);
+        hjypackup(SPI, SPIlength, rssi, hb_ID, recvbuf, spi2mesh_data);
 
         esp_err_t ret = ESP_OK;
 
@@ -449,7 +462,7 @@ static void node_read_task(void *arg)
         // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         memcpy((uint16_t *)&pkg_addr, data + 5, 2);
-        //ifmyaddr = pkg_addr & (1 << (hb_NonRootID - 1));
+        //ifmyaddr = pkg_addr & (1 << (hb_ID - 1));
 
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
@@ -478,6 +491,7 @@ static void node_read_task(void *arg)
                 if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
                 {
                     ESP_LOGE(TAG, "send SPI control message failed or timeout");
+                    free(msg.packet);
                 }
                 // memcpy(sendbuf, mesh_data, size-8);
                 meshmsgtype = 0;
@@ -923,8 +937,8 @@ static void hb_task(void *args)
     flow_control_msg_t msg;
     // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
 
-    uint8_t *hb_msg = (uint8_t *)malloc(100);
-    memset(hb_msg, 0, 100);
+    uint8_t *hb_msg = (uint8_t *)malloc(250);
+    memset(hb_msg, 0, 250);
 
     for (;;)
     {
@@ -933,8 +947,8 @@ static void hb_task(void *args)
 
         // sprintf(test14G, "ROOTHB number %04d.", n);
         hb_msg[0] = hb_RorN;
-        hb_msg[1] = hb_NonRootID;
-        hb_msg[2] = hb_layer;
+        hb_msg[1] = hb_ID;
+        hb_msg[2] = hb_Layer;
         hb_msg[3] = hb_MorS;
         hb_msg[4] = hb_SPIclk >> 24;
         hb_msg[5] = hb_SPIclk >> 16;
@@ -950,7 +964,7 @@ static void hb_task(void *args)
         hb_msg[15] = hb_Route;
 
         msg.packet = hb_msg;
-        msg.length = 100;
+        msg.length = 250;
         // uint8_t fuck =mwifi_is_started();
         // MDF_LOGI("进来 %d",fuck);
         // if (mwifi_is_started() && node_child_connected)

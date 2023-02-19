@@ -42,29 +42,33 @@ wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
+static xQueueHandle SPI_control_queue = NULL;
 uint8_t Multiaddr[6] = {0};
 WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
-static uint16_t NonRootID=0; //判断消息是从哪儿过来的
+static uint16_t NonRootID=1; //判断消息是从哪儿过来的
 static int8_t NonRootRssi=0; 
 
 static uint8_t hb_RorN = 0; //主从
-static uint8_t hb_NonRootID = 0;//本机的编号
-static uint8_t hb_layer = 1;//第二层
+static uint8_t hb_ID = 0;//本机的编号
+static uint8_t hb_Layer = 1;//第二层
 static uint8_t hb_MorS = 1; //Slave
 static uint32_t hb_SPIclk = 8000000;//8M
 static uint32_t hb_BaudRate = 115200;
 static uint16_t hb_Freq = 1400;//1400M
 static uint16_t hb_Route =0;//boardcast
+
 //
 typedef struct {
     uint8_t Connected;    
     int8_t rssi;    
     uint8_t ifeth;
     uint8_t ifspi;
-    uint8_t ifuart;    
+    uint8_t ifuart;   
+    uint32_t GPSL;
+    uint32_t GPSA; 
 } Nonroot_info;
 
 Nonroot_info hb_Ninfo[16];
@@ -113,6 +117,18 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t diy, uint16_t route,voi
     CRCpackage[6] = route;
     CRCpackage[7] = diy;                 
     memcpy(CRCpackage + 8, buffer, len); // buffer
+}
+
+static void hjyctrl(void *buffer,uint16_t len){
+    //for now lack route
+    uint8_t *data;
+    data=(uint8_t *)buffer;
+    hb_RorN = data[0]; //主从
+    hb_ID =  data[1];//本机的编号
+    hb_MorS =  data[2]; //Slave
+    hb_Freq =  data[3]<<8 &  data[4];
+    hb_SPIclk =  data[5]<<24 & data[6]<<16 &  data[7]<<8 & data[8];//8M
+    hb_BaudRate =  data[9]<<24 &  data[10]<<16 &  data[11]<<8 & data[12];
 }
 
 /**
@@ -325,6 +341,15 @@ static void spi_task(void *pvParameters)
         //     }
         // }
 
+        flow_control_msg_t SPI_msg;
+        if (xQueueReceive(SPI_control_queue, &SPI_msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
+        {
+            memcpy(sendbuf, SPI_msg.packet, SPI_msg.length);
+            //先不释放，看一下情况
+            free(SPI_msg.packet);
+        }
+
+
         // ESP_LOGE(TAG, "I am 4");
         //  Set up a transaction of 128 bytes to send/receive
         t.length = 128 * 8;
@@ -454,13 +479,24 @@ static void node_read_task(void *arg)
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
                 //hb_Ninfo[NonRootID-1].ifuart=1;
                 meshmsgtype=0;
+                free(mesh_data);
             }
             else if (meshmsgtype == SPI)
             {
                 printf("SPI:\n");
+                flow_control_msg_t msg = {
+                    .packet = mesh_data,
+                    .length = size-8};
+                if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
+                {
+                    ESP_LOGE(TAG, "send SPI control message failed or timeout");
+                    free(mesh_data);
+                }
                 //memcpy(sendbuf,mesh_data,size-8);
                 //hb_Ninfo[NonRootID-1].ifspi=1;
                 meshmsgtype=0;
+            }else{
+                free(mesh_data);
             }
 
             // for (int i = 0; i < len - 11; i++)
@@ -736,6 +772,12 @@ static esp_err_t initialize_flow_control(void)
         ESP_LOGE(TAG, "create flow control queue failed");
         return ESP_FAIL;
     }
+    SPI_control_queue = xQueueCreate(FLOW_CONTROL_QUEUE_LENGTH, sizeof(flow_control_msg_t));
+    if (!SPI_control_queue)
+    {
+        ESP_LOGE(TAG, "create SPI control queue failed");
+        return ESP_FAIL;
+    }
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
                             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+1,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
@@ -760,16 +802,16 @@ static void hb_task(void *args)
     // uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
     flow_control_msg_t msg;
     // esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
-    uint8_t *hb_msg = (uint8_t *)malloc(100);
-    memset(hb_msg, 0, 100);
+    uint8_t *hb_msg = (uint8_t *)malloc(250);
+    memset(hb_msg, 0, 250);
 
     for (;;)
     {
         data_type.group = true;
         // sprintf(test14G, "ROOTHB number %04d.", n);
         hb_msg[0]=hb_RorN;
-        hb_msg[1]=hb_NonRootID;
-        hb_msg[2]=hb_layer;
+        hb_msg[1]=hb_ID;
+        hb_msg[2]=hb_Layer;
         hb_msg[3]=hb_MorS;
         hb_msg[4]=hb_SPIclk>>24;
         hb_msg[5]=hb_SPIclk>>16;
@@ -784,14 +826,16 @@ static void hb_task(void *args)
         hb_msg[14]=hb_Route>>8;
         hb_msg[15]=hb_Route;
         for(int i=0;i<16;i++){
-            hb_msg[15+i*5]=hb_Ninfo[i].Connected;
-            hb_msg[16+i*5]=hb_Ninfo[i].rssi;
-            hb_msg[17+i*5]=hb_Ninfo[i].ifeth;
-            hb_msg[18+i*5]=hb_Ninfo[i].ifspi;
-            hb_msg[19+i*5]=hb_Ninfo[i].ifuart;
+            hb_msg[15+i*13]=hb_Ninfo[i].Connected;
+            hb_msg[16+i*13]=hb_Ninfo[i].rssi;
+            hb_msg[17+i*13]=hb_Ninfo[i].ifeth;
+            hb_msg[18+i*13]=hb_Ninfo[i].ifspi;
+            hb_msg[19+i*13]=hb_Ninfo[i].ifuart;
+            hb_msg[20+i*13]=hb_Ninfo[i].GPSL;
+            hb_msg[24+i*13]=hb_Ninfo[i].GPSA;
         }
         msg.packet = hb_msg;
-        msg.length = 100;
+        msg.length = 250;
         // uint8_t fuck =mwifi_is_started();
         // MDF_LOGI("进来 %d",fuck);
         // if (mwifi_is_started() && node_child_connected)
@@ -816,6 +860,8 @@ static void hb_task(void *args)
             hb_Ninfo[i].ifeth=0;
             hb_Ninfo[i].ifspi=0;
             hb_Ninfo[i].ifuart=0;
+            hb_Ninfo[i].GPSL=0;
+            hb_Ninfo[i].GPSA=0;
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -916,5 +962,5 @@ void app_main()
 
     // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    //xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
 }
