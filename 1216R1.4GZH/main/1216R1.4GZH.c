@@ -126,9 +126,10 @@ static void hjyctrl(void *buffer,uint16_t len){
     hb_RorN = data[0]; //主从
     hb_ID =  data[1];//本机的编号
     hb_MorS =  data[2]; //Slave
-    hb_Freq =  data[3]<<8 &  data[4];
-    hb_SPIclk =  data[5]<<24 & data[6]<<16 &  data[7]<<8 & data[8];//8M
-    hb_BaudRate =  data[9]<<24 &  data[10]<<16 &  data[11]<<8 & data[12];
+    hb_Freq =  data[3]<<8 | data[4];
+    hb_SPIclk =  data[5]<<24 | data[6]<<16 |  data[7]<<8 | data[8];//8M
+    hb_BaudRate =  data[9]<<24 | data[10]<<16 | data[11]<<8 | data[12];
+    printf("%d %d %d %d %d %d \n\r",hb_RorN,hb_ID,hb_MorS,hb_Freq,hb_SPIclk,hb_BaudRate);
 }
 
 /**
@@ -275,7 +276,7 @@ static void spi_task(void *pvParameters)
         .mosi_io_num = GPIO_MOSI,
         .miso_io_num = GPIO_MISO,
         .sclk_io_num = GPIO_SCLK,
-        .flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
+        //.flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
         .quadwp_io_num = -1,                   // added -1 default
         .quadhd_io_num = -1,
     };
@@ -365,7 +366,7 @@ static void spi_task(void *pvParameters)
 
         ret = spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY);
         // ESP_LOGE(TAG, "I am 5");
-        ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
+        //ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
         // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
         memset(sendbuf, 0, 129);
@@ -503,7 +504,7 @@ static void node_read_task(void *arg)
             // {
             //     printf("%c", ((char *)wifi_data)[i]);
             // }
-            free(mesh_data);
+            // free(mesh_data);
             // printf("\n\r");
         }
         else if(s_ethernet_is_connected)        /* forwoad to eth */
@@ -579,6 +580,9 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if(len==100){
+        hjyctrl(buffer,len);
+    }
     //         if (len){
     //     MDF_LOGI("ETH Downlinking...");
     // }
@@ -960,7 +964,7 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

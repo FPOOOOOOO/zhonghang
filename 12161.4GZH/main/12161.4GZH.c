@@ -366,7 +366,7 @@ static void spi_task(void *pvParameters)
 
         ret = spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY);
         // ESP_LOGE(TAG, "I am 5");
-        ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
+        //ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
         // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
         memset(sendbuf, 0, 129);
@@ -491,7 +491,7 @@ static void node_read_task(void *arg)
                 if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
                 {
                     ESP_LOGE(TAG, "send SPI control message failed or timeout");
-                    free(msg.packet);
+                    free(mesh_data);
                 }
                 // memcpy(sendbuf, mesh_data, size-8);
                 meshmsgtype = 0;
@@ -1071,7 +1071,7 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    //xTaskCreate(hb_task, "hb_task", 4096, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

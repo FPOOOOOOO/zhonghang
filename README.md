@@ -738,4 +738,12 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 
 ## <span id = "78">0218</span>
 1、Qdebug()比printf快 \
-2、
+
+## <span id = "79">0219</span>
+1、SPI 加入没大问题，双边透传有丢包现象，单边SPI有num重复的现象，关掉一遍的SPI，另一边还是会持续接收一段时间然后才是0，看起来就是在队列里 \
+2、有双边SPI的时候好像连不上ROOT（第二次又连上了）\
+3、有双向SPI的时候，jperf只能到1.2M（单边SPI都有点断掉），把R-SPI断电，恢复到1.6M，还是低很多。关闭SPItask，将HB调低到1024以后,恢复到3M\
+4、有时候从机连不上啊，咋回事（3号有一根线断了），新的天线也差不多3M\
+
+## <span id = "80">0220</span>
+1、Qdebug()比printf快 \
