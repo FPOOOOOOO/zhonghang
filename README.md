@@ -746,4 +746,4 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 4、有时候从机连不上啊，咋回事（3号有一根线断了），新的天线也差不多3M\
 
 ## <span id = "80">0220</span>
-1、Qdebug()比printf快 \
+1、debug开始
