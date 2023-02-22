@@ -747,4 +747,8 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 
 ## <span id = "80">0220</span>
 1、改一下MWifi——Root里面的衰减，都到-90 \
-2、
+
+## <span id = "81">0221</span>
+1、王老师救命来了，先测了一下发送和接收 \
+2、然后在看杂散、发送增益和发送功率的区别？功率增益和小信号增益导致老板子发射功率比新板子还高\
+3、重新考虑整体混频，把 
