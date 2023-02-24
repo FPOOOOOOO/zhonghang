@@ -764,4 +764,5 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 4、
 
 ## <span id = "83">0223</span>
-1、
+1、I2C 用GPIO模拟的时候 SLK要给够——官网上好像也没有给够啊\
+2、
