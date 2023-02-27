@@ -768,4 +768,6 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 2、完全模拟了GPIO RFFC，不知道怎么不行 \
 
 ## <span id = "84">0224</span>
-1、I
+1、新板子速度也还可以
+2、2071这个片子没有直接的输出，需要看泄露
+
