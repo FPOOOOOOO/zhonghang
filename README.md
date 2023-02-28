@@ -771,3 +771,6 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 1、新板子速度也还可以
 2、2071这个片子没有直接的输出，需要看泄露
 
+## <span id = "85">0227</span>
+1、Jperf 2+2=4M 暂时没问题\
+2、iperf 16M看看有没有问题 / 直连看看有没有问题\
