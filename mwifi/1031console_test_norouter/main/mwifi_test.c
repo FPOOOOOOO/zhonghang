@@ -47,7 +47,7 @@ uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
                     // 注：输入频率的单位为MHz，R的范围为0~1023的整数
                     // 默认输入频率为板载25M晶振，故得R为125。
                     // 板载40M晶振，则R=200
-uint32_t F = 38000; // 350 初始频率35MHz
+uint32_t F = 39000; // 350 初始频率35MHz
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -74,7 +74,6 @@ struct mesh_iperf_cfg
 static const char *TAG = "mwifi_test";
 esp_netif_t *sta_netif;
 
-
 static void GPIO_INIT(void)
 {
     // zero-initialize the config structure.
@@ -96,17 +95,17 @@ static void GPIO_INIT(void)
 }
 
 //-----------------------------------------------------------------
-//函数名称:void ADF4351_Wdata(uint32_t dat)
-//函数功能:ADF4351写数据
-//入口参数:无
-//出口参数:无
+// 函数名称:void ADF4351_Wdata(uint32_t dat)
+// 函数功能:ADF4351写数据
+// 入口参数:无
+// 出口参数:无
 //-----------------------------------------------------------------
 
 void ADF4351_Wdata(uint32_t dat)
 {
     uint8_t i;
     ADF_CLK_Clr;
-    ADF_LE_Clr; //让32位移位寄存器准备接受下一次数据
+    ADF_LE_Clr; // 让32位移位寄存器准备接受下一次数据
     for (i = 0; i < 32; i++)
     {
         if (dat & 0x80000000)
@@ -115,16 +114,16 @@ void ADF4351_Wdata(uint32_t dat)
             ADF_DATA_Clr;
         dat <<= 1;
         ADF_CLK_Set;
-        ADF_CLK_Clr; //数据在CLK上升沿时逐个输入32位移位寄存器
+        ADF_CLK_Clr; // 数据在CLK上升沿时逐个输入32位移位寄存器
     }
-    ADF_LE_Set; //打高使得32位移位寄存器按?的寄存器地址进行写入
+    ADF_LE_Set; // 打高使得32位移位寄存器按?的寄存器地址进行写入
 }
 
 //-----------------------------------------------------------------
-//函数名称:void ADF4351_Init(uint32_t date)
-//函数功能:ADF4351初始化
-//入口参数:无
-//出口参数:无
+// 函数名称:void ADF4351_Init(uint32_t date)
+// 函数功能:ADF4351初始化
+// 入口参数:无
+// 出口参数:无
 //-----------------------------------------------------------------
 
 void ADF4351_Init(uint32_t date)
@@ -597,17 +596,21 @@ static void mesh_iperf_client_task(void *arg)
         }
         else
         {
-            if (IsRoot == 1)
-            {
-                ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer,
-                                  g_mesh_iperf_cfg.packet_len, true);
-            }
-            else
-            {
-                ret = mwifi_write(NULL, &data_type, buffer,
-                                  g_mesh_iperf_cfg.packet_len, true);
-            }
+            ret = mwifi_write(NULL, &data_type, buffer,
+                              g_mesh_iperf_cfg.packet_len, true);
         }
+        // {
+        //     if (IsRoot == 1)
+        //     {
+        //         ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer,
+        //                           g_mesh_iperf_cfg.packet_len, true);
+        //     }
+        //     else
+        //     {
+        //         ret = mwifi_write(NULL, &data_type, buffer,
+        //                           g_mesh_iperf_cfg.packet_len, true);
+        //     }
+        // }
 
         MDF_ERROR_BREAK(ret != MDF_OK, "<%s> mwifi_write", mdf_err_to_name(ret));
         data_type.custom++;
@@ -638,15 +641,19 @@ static void mesh_iperf_client_task(void *arg)
         }
         else
         {
-            if (IsRoot == 1)
-            {
-                ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer, 1, true);
-            }
-            else
-            {
-                ret = mwifi_write(NULL, &data_type, buffer, 1, true);
-            }
+            ret = mwifi_write(NULL, &data_type, buffer, 1, true);
         }
+        // else
+        // {
+        //     if (IsRoot == 1)
+        //     {
+        //         ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer, 1, true);
+        //     }
+        //     else
+        //     {
+        //         ret = mwifi_write(NULL, &data_type, buffer, 1, true);
+        //     }
+        // }
 
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_write", mdf_err_to_name(ret));
 
@@ -1088,11 +1095,11 @@ void app_main()
     };
 
     mwifi_config_t config = {
-        .channel = 13,
+        .channel = 12,
         .mesh_id = "123456",
         .mesh_type = 2,
     };
-    //1 ROOT 2 NONROOT
+    // 1 ROOT 2 NONROOT
 
     /**
      * @brief Set the log level for serial port printing.
@@ -1106,7 +1113,7 @@ void app_main()
     ESP_LOGI(TAG, "I am here2");
     int cnt = 0;
     SetFreq(F);
-    SetFreq(F);    
+    SetFreq(F);
     SetFreq(F);
 
     ESP_LOGI(TAG, "Freq set.");
@@ -1121,7 +1128,6 @@ void app_main()
 
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
     MDF_ERROR_ASSERT(mwifi_start());
-
 
     // if (mdf_info_load("init_config", &networking_config, sizeof(mwifi_init_config_t)) == MDF_OK && mdf_info_load("ap_config", &ap_config, sizeof(mwifi_config_t)) == MDF_OK)
     // {

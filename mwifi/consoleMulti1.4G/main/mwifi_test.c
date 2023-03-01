@@ -22,10 +22,10 @@
 #include "esp_console.h"
 #include "argtable3/argtable3.h"
 
-//added 1.4G 
+// added 1.4G
 #include "driver/gpio.h"
 
-//added 1.4Gend
+// added 1.4Gend
 #define GPIO_OUTPUT_IO_0 25 // SPI?_CLK（IO32） SPI_MOSI（IO2）  SPINSS(IO16)
 #define GPIO_OUTPUT_IO_1 16 // NSS
 #define GPIO_OUTPUT_IO_2 2  // MOSI
@@ -49,7 +49,9 @@ uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
                     // 注：输入频率的单位为MHz，R的范围为0~1023的整数
                     // 默认输入频率为板载25M晶振，故得R为125。
                     // 板载40M晶振，则R=200
-uint32_t F = 38000; // 350 初始频率35MHz
+uint32_t F = 39000; // 350 初始频率35MHz
+
+uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0};
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -78,7 +80,6 @@ struct mesh_iperf_cfg t_mesh_iperf_cfg[4];
 static const char *TAG = "mwifi_test";
 esp_netif_t *sta_netif;
 
-
 static void GPIO_INIT(void)
 {
     // zero-initialize the config structure.
@@ -100,17 +101,17 @@ static void GPIO_INIT(void)
 }
 
 //-----------------------------------------------------------------
-//函数名称:void ADF4351_Wdata(uint32_t dat)
-//函数功能:ADF4351写数据
-//入口参数:无
-//出口参数:无
+// 函数名称:void ADF4351_Wdata(uint32_t dat)
+// 函数功能:ADF4351写数据
+// 入口参数:无
+// 出口参数:无
 //-----------------------------------------------------------------
 
 void ADF4351_Wdata(uint32_t dat)
 {
     uint8_t i;
     ADF_CLK_Clr;
-    ADF_LE_Clr; //让32位移位寄存器准备接受下一次数据
+    ADF_LE_Clr; // 让32位移位寄存器准备接受下一次数据
     for (i = 0; i < 32; i++)
     {
         if (dat & 0x80000000)
@@ -119,16 +120,16 @@ void ADF4351_Wdata(uint32_t dat)
             ADF_DATA_Clr;
         dat <<= 1;
         ADF_CLK_Set;
-        ADF_CLK_Clr; //数据在CLK上升沿时逐个输入32位移位寄存器
+        ADF_CLK_Clr; // 数据在CLK上升沿时逐个输入32位移位寄存器
     }
-    ADF_LE_Set; //打高使得32位移位寄存器按?的寄存器地址进行写入
+    ADF_LE_Set; // 打高使得32位移位寄存器按?的寄存器地址进行写入
 }
 
 //-----------------------------------------------------------------
-//函数名称:void ADF4351_Init(uint32_t date)
-//函数功能:ADF4351初始化
-//入口参数:无
-//出口参数:无
+// 函数名称:void ADF4351_Init(uint32_t date)
+// 函数功能:ADF4351初始化
+// 入口参数:无
+// 出口参数:无
 //-----------------------------------------------------------------
 
 void ADF4351_Init(uint32_t date)
@@ -578,8 +579,9 @@ static void mesh_iperf_client_task(void *arg)
 
     mwifi_data_type_t data_type = {
         .protocol = IPERF_BANDWIDTH,
-    };
+    }; 
 
+    data_type.custom=0;
     TickType_t start_ticks = xTaskGetTickCount();
     TickType_t end_ticks = start_ticks + g_mesh_iperf_cfg.transmit_time * 1000 * portTICK_RATE_MS;
     uint32_t total_count = 0;
@@ -590,7 +592,6 @@ static void mesh_iperf_client_task(void *arg)
     for (uint32_t report_ticks = start_ticks + g_mesh_iperf_cfg.report_interval * 1000 / portTICK_RATE_MS, report_count = 0;
          xTaskGetTickCount() < end_ticks && !g_mesh_iperf_cfg.finish; ++total_count)
     {
-
         IsRoot = esp_mesh_get_layer();
         // MDF_LOGI("IsRoot : %d",IsRoot);
         if (IsRoot == 1)
@@ -601,16 +602,8 @@ static void mesh_iperf_client_task(void *arg)
         }
         else
         {
-            if (IsRoot == 1)
-            {
-                ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer,
-                                  g_mesh_iperf_cfg.packet_len, true);
-            }
-            else
-            {
-                ret = mwifi_write(NULL, &data_type, buffer,
-                                  g_mesh_iperf_cfg.packet_len, true);
-            }
+            ret = mwifi_write(NULL, &data_type, buffer,
+                              g_mesh_iperf_cfg.packet_len, true);
         }
 
         MDF_ERROR_BREAK(ret != MDF_OK, "<%s> mwifi_write", mdf_err_to_name(ret));
@@ -642,19 +635,14 @@ static void mesh_iperf_client_task(void *arg)
         }
         else
         {
-            if (IsRoot == 1)
-            {
-                ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, buffer, 1, true);
-            }
-            else
-            {
-                ret = mwifi_write(NULL, &data_type, buffer, 1, true);
-            }
+            ret = mwifi_write(NULL, &data_type, buffer, 1, true);
         }
 
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_write", mdf_err_to_name(ret));
 
         size_t buffer_len = g_mesh_iperf_cfg.packet_len;
+
+        // ret = mwifi_read(g_mesh_iperf_cfg.addr, &data_type, buffer, &buffer_len, 3000 / portTICK_RATE_MS);
         if (IsRoot == 1)
         {
             ret = mwifi_root_read(g_mesh_iperf_cfg.addr, &data_type, buffer, &buffer_len, 3000 / portTICK_RATE_MS);
@@ -700,19 +688,22 @@ static void mesh_iperf_server_task(void *arg)
     // size_t buffer_len = MWIFI_PAYLOAD_LEN;
     // mwifi_data_type_t data_type = {0};
 
-    //adapt below into 4 
-    TickType_t start_ticks=0;
-    uint32_t recv_count[4] = {0,0,0,0};
+    // adapt below into 4
+    TickType_t start_ticks = 0;
+    uint32_t recv_count[4] = {0, 0, 0, 0}; // 记录收到的包数，自己收的。
 
     uint32_t IsRoot = 0;
-    uint32_t NowIs=0;
+    uint32_t NowIs = 0;
+    // 判断golbal是否在收
     bool IsRecving = 0;
-    uint32_t custom[4] = {-1, -1, -1, -1};
-    for(int k=0;k<4;k++){
-        t_mesh_iperf_cfg[k].finish=true;
+    uint32_t custom[4] = {-1, -1, -1, -1}; // 记录收到的包数，对面来的。
+
+    for (int k = 0; k < 4; k++)
+    {
+        t_mesh_iperf_cfg[k].finish = true;
     }
 
-    //double report_size[4];
+    // double report_size[4];
 
     MDF_LOGI("[    Client MAC   ] Interval       Transfer     Bandwidth");
 
@@ -720,6 +711,9 @@ static void mesh_iperf_server_task(void *arg)
          !g_mesh_iperf_cfg.finish;)
     {
         IsRoot = esp_mesh_get_layer();
+        // 都先收到g_mesh_iperf里然后判断
+        // ret = mwifi_read(g_mesh_iperf_cfg.addr, &data_type, &buffer,
+        //                  &buffer_len, 100 / portTICK_RATE_MS);
         if (IsRoot == 1)
         {
             ret = mwifi_root_read(g_mesh_iperf_cfg.addr, &data_type, &buffer,
@@ -733,45 +727,61 @@ static void mesh_iperf_server_task(void *arg)
                              &buffer_len, 100 / portTICK_RATE_MS);
             // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_root_read", mdf_err_to_name(ret));
         }
+        if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
+        {
+            continue;
+        }
+        else if (ret != MDF_OK) // 是在这里结束吗，存疑
+        {
+            // t_mesh_iperf_cfg[NowIs].finish = true;
+            // g_mesh_iperf_cfg.finish = ((t_mesh_iperf_cfg[0].finish) & (t_mesh_iperf_cfg[1].finish) & (t_mesh_iperf_cfg[2].finish) & (t_mesh_iperf_cfg[3].finish));
+            MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
+            goto FREE_MEM;
+        }
+        // if (IsRoot == 1)
+        // {
+        //     ret = mwifi_root_read(g_mesh_iperf_cfg.addr, &data_type, &buffer,
+        //                           &buffer_len, 100 / portTICK_RATE_MS);
+        //     // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_root_read", mdf_err_to_name(ret));
+        //     //  MDF_LOGI("I am Root");
+        // }
+        // else
+        // {
+        //     ret = mwifi_read(g_mesh_iperf_cfg.addr, &data_type, &buffer,
+        //                      &buffer_len, 100 / portTICK_RATE_MS);
+        //     // MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_root_read", mdf_err_to_name(ret));
+        // }
 
         // differ the client
-        //if ((!t_mesh_iperf_cfg[0].finish)|(!t_mesh_iperf_cfg[1].finish)|(!t_mesh_iperf_cfg[2].finish)|(!t_mesh_iperf_cfg[3].finish))
-        if(!g_mesh_iperf_cfg.finish)
-        {
-            IsRecving = 1;
-        }else{
-            IsRecving = 0;
-        }
+        // if ((!t_mesh_iperf_cfg[0].finish)|(!t_mesh_iperf_cfg[1].finish)|(!t_mesh_iperf_cfg[2].finish)|(!t_mesh_iperf_cfg[3].finish))
+        // if (!g_mesh_iperf_cfg.finish)
+        // {
+        //     IsRecving = 1;
+        // }
+        // else
+        // {
+        //     IsRecving = 0;
+        // }
+
+        // 进行判断，这次是哪一个包的，t_mesh_iperf四个是动态变化的
 
         for (int j = 0; j < 4; j++)
         {
             if (memcmp(t_mesh_iperf_cfg[j].addr, g_mesh_iperf_cfg.addr, 6) == 0)
             {
                 custom[j] = data_type.custom;
-                NowIs=j;
-                t_mesh_iperf_cfg[j].finish=false;
+                NowIs = j;
+                t_mesh_iperf_cfg[j].finish = false;
                 break;
             }
             else if (custom[j] == -1)
             {
                 memcpy(t_mesh_iperf_cfg[j].addr, g_mesh_iperf_cfg.addr, 6);
                 custom[j] = data_type.custom;
-                NowIs=j;
-                t_mesh_iperf_cfg[j].finish=false;
+                NowIs = j;
+                t_mesh_iperf_cfg[j].finish = false;
                 break;
             }
-        }
-
-        if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
-        {
-            continue;
-        }
-        else if (ret != MDF_OK)
-        {
-            t_mesh_iperf_cfg[NowIs].finish=true;
-            g_mesh_iperf_cfg.finish = ((t_mesh_iperf_cfg[0].finish)&(t_mesh_iperf_cfg[1].finish)&(t_mesh_iperf_cfg[2].finish)&(t_mesh_iperf_cfg[3].finish));
-            MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
-            goto FREE_MEM;
         }
 
         recv_count[NowIs]++;
@@ -779,25 +789,27 @@ static void mesh_iperf_server_task(void *arg)
         if (data_type.custom == 0)
         {
             recv_count[NowIs] = 0;
-            if(!start_ticks){
+            custom[NowIs] = 0;
+            if (!IsRecving)
+            {
                 start_ticks = xTaskGetTickCount();
                 report_ticks = start_ticks + g_mesh_iperf_cfg.report_interval * 1000 / portTICK_RATE_MS;
+                IsRecving = true; // 这个for只记录第一次进来的
             }
-            
         }
 
         if (data_type.protocol == IPERF_BANDWIDTH && xTaskGetTickCount() >= report_ticks)
         {
             uint32_t report_timer = (report_ticks - start_ticks) * portTICK_RATE_MS / 1000;
-            //TBD0824
-            //double report_size[NowIs]=(data_type.custom - report_count)* g_mesh_iperf_cfg.packet_len / 1e6;
-            double report_size = (custom[0]+custom[1]+custom[2]+custom[3] - report_count) * g_mesh_iperf_cfg.packet_len / 1e6;
+            // TBD0824
+            // double report_size[NowIs]=(data_type.custom - report_count)* g_mesh_iperf_cfg.packet_len / 1e6;
+            double report_size = (custom[0] + custom[1] + custom[2] + custom[3] - report_count) * g_mesh_iperf_cfg.packet_len / 1e6;
             MDF_LOGI("[" MACSTR "]  %2d-%2d sec  %2.2f MBytes  %0.2f Mbits/sec",
                      MAC2STR(g_mesh_iperf_cfg.addr), report_timer - g_mesh_iperf_cfg.report_interval, report_timer,
                      report_size, report_size * 8 / g_mesh_iperf_cfg.report_interval);
 
             report_ticks = xTaskGetTickCount() + g_mesh_iperf_cfg.report_interval * 1000 / portTICK_RATE_MS;
-            report_count = custom[0]+custom[1]+custom[2]+custom[3];
+            report_count = custom[0] + custom[1] + custom[2] + custom[3];
         }
         // else if (data_type.protocol == IPERF_PING)
         // {
@@ -808,18 +820,61 @@ static void mesh_iperf_server_task(void *arg)
         // }
         else if (data_type.protocol == IPERF_BANDWIDTH_STOP)
         {
-            if( g_mesh_iperf_cfg.finish==true){
-            uint32_t total_count = custom[0]+custom[1]+custom[2]+custom[3];
-            uint32_t lost_count = total_count - recv_count[0]-recv_count[1]-recv_count[2]-recv_count[3];
-            double total_len = (total_count * g_mesh_iperf_cfg.packet_len) / 1e6;
-            uint32_t spend_time = (xTaskGetTickCount() - start_ticks) * portTICK_RATE_MS;
+            // 这里单个的结束了，整个还没结束
+            // 进行判断，看看哪个Nonroot结束了，还是整体的结束了
+            t_mesh_iperf_cfg[NowIs].finish = true;
 
-            MDF_LOGI("[ ID] Interval      Transfer       Bandwidth      Jitter   Lost/Total Datagrams");
-            MDF_LOGI("[000] %2d-%2d sec    %2.2f MBytes    %0.2f Mbits/sec    %d ms    %d/%d (%d%%)",
-                     0, spend_time / 1000, total_len, total_len * 8 * 1000 / spend_time, spend_time / (recv_count[0]+recv_count[1]+recv_count[2]+recv_count[3]),
-                     lost_count, total_count, lost_count * 100 / total_count);
+            // for (int j = 0; j < 4; j++)
+            // {
+            //     if (memcmp(t_mesh_iperf_cfg[j].addr, g_mesh_iperf_cfg.addr, 6) == 0)
+            //     {
+            //         NowIs = j;
+            //         t_mesh_iperf_cfg[j].finish = true;
+            //         custom[j]=-1;
+            //         break;
+            //     }
+            //     else if (custom[j] == -1)
+            //     {
+            //         memcpy(t_mesh_iperf_cfg[j].addr, g_mesh_iperf_cfg.addr, 6);
+            //         custom[j] = data_type.custom;
+            //         NowIs = j;
+            //         t_mesh_iperf_cfg[j].finish = false;
+            //         break;
+            //     }
+            // }
+
+            // 这里很关键，会控制会不会能继续循环，只要有一个的finish是false，就还在运行。
+            if ((!t_mesh_iperf_cfg[0].finish) | (!t_mesh_iperf_cfg[1].finish) | (!t_mesh_iperf_cfg[2].finish) | (!t_mesh_iperf_cfg[3].finish))
+            {
+                IsRecving = true;
+            }
+            else
+            {
+                IsRecving = false;
             }
 
+            if (IsRecving == false)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (custom[j] == -1)
+                    {
+                        custom[j] += 1;
+                    }
+                }
+                uint32_t total_count = custom[0] + custom[1] + custom[2] + custom[3];
+                uint32_t lost_count = total_count - recv_count[0] - recv_count[1] - recv_count[2] - recv_count[3];
+                double total_len = (total_count * g_mesh_iperf_cfg.packet_len) / 1e6;
+                uint32_t spend_time = (xTaskGetTickCount() - start_ticks) * portTICK_RATE_MS;
+                MDF_LOGI("[ ID] Interval      Transfer       Bandwidth      Jitter   Lost/Total Datagrams");
+                MDF_LOGI("[000] %2d-%2d sec    %2.2f MBytes    %0.2f Mbits/sec    %d ms    %d/%d (%d%%)",
+                         0, spend_time / 1000, total_len, total_len * 8 * 1000 / spend_time, spend_time / (recv_count[0] + recv_count[1] + recv_count[2] + recv_count[3]),
+                         lost_count, total_count, lost_count * 100 / total_count);
+                for (int j = 0; j < 4; j++)
+                {
+                    custom[j] = -1;
+                }
+            }
 
             data_type.custom = recv_count[NowIs];
             MDF_LOGD("data_type.custom: %d", data_type.custom);
@@ -831,7 +886,7 @@ static void mesh_iperf_server_task(void *arg)
             {
                 ret = mwifi_write(g_mesh_iperf_cfg.addr, &data_type, &ret, 1, true);
             }
-            
+
             MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_write", mdf_err_to_name(ret));
         }
 
@@ -932,9 +987,9 @@ static struct
 static esp_err_t mesh_iperf_func(int argc, char **argv)
 {
     mdf_err_t ret = MDF_OK;
-    //g_mesh_iperf_cfg.packet_len = MWIFI_PAYLOAD_LEN;
-    //length
-    g_mesh_iperf_cfg.packet_len = 100;
+    g_mesh_iperf_cfg.packet_len = MWIFI_PAYLOAD_LEN;
+    // length
+    // g_mesh_iperf_cfg.packet_len = 100;
     g_mesh_iperf_cfg.transmit_time = 60;
     g_mesh_iperf_cfg.report_interval = 3;
     g_mesh_iperf_cfg.ping_count = 64;
@@ -1140,11 +1195,11 @@ void app_main()
     };
 
     mwifi_config_t config = {
-        .channel = 13,
+        .channel = 12,
         .mesh_id = "123456",
         .mesh_type = 1,
     };
-    //1 ROOT 2 NONROOT
+    // 1 ROOT 2 NONROOT
 
     /**
      * @brief Set the log level for serial port printing.
@@ -1158,7 +1213,7 @@ void app_main()
     ESP_LOGI(TAG, "I am here2");
     int cnt = 0;
     SetFreq(F);
-    SetFreq(F);    
+    SetFreq(F);
     SetFreq(F);
 
     ESP_LOGI(TAG, "Freq set.");
