@@ -785,3 +785,7 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 1、2.4G wifi iperf速度都只有10M了，完蛋了，看起来只有ESP——电脑才有更高的速率:确实，电脑上能到25M
 ——晚上用IPEX转SMA看一下两块ESP之间的速率：还没试，等上海回来试一下\
 2、
+
+## <span id = "88">230303</span>
+1、2071mlgb!
+2、
