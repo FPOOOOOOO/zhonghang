@@ -799,3 +799,6 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 4、2.4G直连iperf 一对多
 5、2.4G直连Jperf 1对1,1对多
 6、2.4Gmesh iperf 1对1，1对多
+
+## <span id = "90">230306</span>
+1、270M 单向2M，双向各1M可以。
