@@ -25,6 +25,7 @@
 #include "esp_spi_flash.h"
 
 #include "1.4G.h"
+#include "GPS.h"
 
 // #define MEMORY_DEBUG
 #define BUF_SIZE 512
@@ -48,27 +49,47 @@ WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
-static uint16_t NonRootID=1; //判断消息是从哪儿过来的
-static int8_t NonRootRssi=0; 
+static uint16_t NonRootID = 1; // 判断消息是从哪儿过来的
+static int8_t NonRootRssi = 0;
 
-static uint8_t hb_RorN = 0; //主从
-static uint8_t hb_ID = 0;//本机的编号
-static uint8_t hb_Layer = 1;//第二层
-static uint8_t hb_MorS = 1; //Slave
-static uint32_t hb_SPIclk = 8000000;//8M
+static uint8_t hb_RorN = 0;          // 主从
+static uint8_t hb_ID = 0;            // 本机的编号
+static uint8_t hb_Layer = 1;         // 第二层
+static uint8_t hb_MorS = 1;          // Slave
+static uint32_t hb_SPIclk = 8000000; // 8M
 static uint32_t hb_BaudRate = 115200;
-static uint16_t hb_Freq = 1400;//1400M
-static uint16_t hb_Route =0;//boardcast
+static uint16_t hb_Freq = 1400; // 1400M
+static uint16_t hb_Route = 0;   // boardcast
+
+uint8_t NONROOT_MAC[16][6] = {
+    {0xc4, 0xde, 0xe2, 0xc0, 0x0a, 0xd4}, // 1   黑垫
+    {0xc8, 0xf0, 0x9e, 0x1a, 0x3f, 0x84}, // 2   3号
+    {0xc8, 0xf0, 0x9e, 0x1a, 0x40, 0x64}, // 3   5号
+    {},                                   // 4
+    {},                                   // 5
+    {},                                   // 6
+    {},                                   // 7
+    {},                                   // 8
+    {},                                   // 9
+    {},                                   // 10
+    {},                                   // 11
+    {},                                   // 12
+    {},                                   // 13
+    {},                                   // 14
+    {},                                   // 15
+    {}                                    // 16
+};
 
 //
-typedef struct {
-    uint8_t Connected;    
-    int8_t rssi;    
+typedef struct
+{
+    uint8_t Connected;
+    int8_t rssi;
     uint8_t ifeth;
     uint8_t ifspi;
-    uint8_t ifuart;   
+    uint8_t ifuart;
     uint32_t GPSL;
-    uint32_t GPSA; 
+    uint32_t GPSA;
 } Nonroot_info;
 
 Nonroot_info hb_Ninfo[16];
@@ -89,7 +110,9 @@ static uint8_t meshmsgtype = 0;
 static uint8_t recvbuf[129];
 static uint8_t sendbuf[129];
 
-//WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
+static nmea_msg GPSinfo[16];
+
+// WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
 
@@ -102,7 +125,7 @@ typedef struct
 static const char *TAG = "eth2mesh";
 esp_netif_t *sta_netif;
 
-static void hjypackup(uint8_t type, uint16_t len, int8_t diy, uint16_t route,void *buffer, uint8_t *CRCpackage)
+static void hjypackup(uint8_t type, uint16_t len, int8_t diy, uint16_t route, void *buffer, uint8_t *CRCpackage)
 {
     // uint8_t *newpackage = (uint8_t *)malloc(len + 9);
     // bzero(newpackage, len + 9);
@@ -112,24 +135,25 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t diy, uint16_t route,voi
     // memcpy(newpackage, header, 2); // header
     CRCpackage[2] = type; // type
     CRCpackage[3] = len >> 8;
-    CRCpackage[4] = len; // len
-    CRCpackage[5] = route>> 8; // route
+    CRCpackage[4] = len;        // len
+    CRCpackage[5] = route >> 8; // route
     CRCpackage[6] = route;
-    CRCpackage[7] = diy;                 
+    CRCpackage[7] = diy;
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 
-static void hjyctrl(void *buffer,uint16_t len){
-    //for now lack route
+static void hjyctrl(void *buffer, uint16_t len)
+{
+    // for now lack route
     uint8_t *data;
-    data=(uint8_t *)buffer;
-    hb_RorN = data[0]; //主从
-    hb_ID =  data[1];//本机的编号
-    hb_MorS =  data[2]; //Slave
-    hb_Freq =  data[3]<<8 | data[4];
-    hb_SPIclk =  data[5]<<24 | data[6]<<16 |  data[7]<<8 | data[8];//8M
-    hb_BaudRate =  data[9]<<24 | data[10]<<16 | data[11]<<8 | data[12];
-    printf("%d %d %d %d %d %d \n\r",hb_RorN,hb_ID,hb_MorS,hb_Freq,hb_SPIclk,hb_BaudRate);
+    data = (uint8_t *)buffer;
+    hb_RorN = data[0]; // 主从
+    hb_ID = data[1];   // 本机的编号
+    hb_MorS = data[2]; // Slave
+    hb_Freq = data[3] << 8 | data[4];
+    hb_SPIclk = data[5] << 24 | data[6] << 16 | data[7] << 8 | data[8]; // 8M
+    hb_BaudRate = data[9] << 24 | data[10] << 16 | data[11] << 8 | data[12];
+    printf("%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
 }
 
 /**
@@ -173,7 +197,7 @@ static void uart_task(void *arg)
     esp_wifi_get_mac(ESP_IF_WIFI_STA, sta_mac);
 
     /* uart initialization */
-    //MDF_ERROR_ASSERT(uart_initialize());
+    // MDF_ERROR_ASSERT(uart_initialize());
 
     while (1)
     {
@@ -185,11 +209,11 @@ static void uart_task(void *arg)
             continue;
         }
 
-        //ESP_LOGI("UART Recv data:", "%s %d", data, recv_length);
+        // ESP_LOGI("UART Recv data:", "%s %d", data, recv_length);
 
         uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8);
         bzero(uart2mesh_data, recv_length + 8);
-        hjypackup(UART, recv_length, 0,0, data, uart2mesh_data);
+        hjypackup(UART, recv_length, 0, 0, data, uart2mesh_data);
 
         esp_err_t ret = ESP_OK;
         flow_control_msg_t msg = {
@@ -277,7 +301,7 @@ static void spi_task(void *pvParameters)
         .miso_io_num = GPIO_MISO,
         .sclk_io_num = GPIO_SCLK,
         //.flags = SPICOMMON_BUSFLAG_IOMUX_PINS, // added IOMUX
-        .quadwp_io_num = -1,                   // added -1 default
+        .quadwp_io_num = -1, // added -1 default
         .quadhd_io_num = -1,
     };
 
@@ -312,15 +336,16 @@ static void spi_task(void *pvParameters)
 
     // ESP_LOGE(TAG, "I am 1");
     //  WORD_ALIGNED_ATTR char sendbuf[129] = "hihu";
-    //WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
+    // WORD_ALIGNED_ATTR char recvbuf[129] = "fuckme";
 
-    //memset(recvbuf, 0, 33);
+    // memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
     memset(recvbuf, 0, 129);
     memset(sendbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
-
+    flow_control_msg_t SPI_msg;
+    
     while (1)
     {
         // Clear receive buffer, set send buffer to something sane
@@ -342,14 +367,12 @@ static void spi_task(void *pvParameters)
         //     }
         // }
 
-        flow_control_msg_t SPI_msg;
         if (xQueueReceive(SPI_control_queue, &SPI_msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
         {
             memcpy(sendbuf, SPI_msg.packet, SPI_msg.length);
-            //先不释放，看一下情况
+            // 先不释放，看一下情况
             free(SPI_msg.packet);
         }
-
 
         // ESP_LOGE(TAG, "I am 4");
         //  Set up a transaction of 128 bytes to send/receive
@@ -366,7 +389,7 @@ static void spi_task(void *pvParameters)
 
         ret = spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY);
         // ESP_LOGE(TAG, "I am 5");
-        //ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
+        // ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
         // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
         memset(sendbuf, 0, 129);
@@ -388,16 +411,18 @@ static void spi_task(void *pvParameters)
         // added 0713 to transfer via wifi
         uint8_t SPIlength = 0;
 
-        for(int i=0;i<129;i++){
-            if(recvbuf[i]==0) {
-                SPIlength=i+1;
+        for (int i = 0; i < 129; i++)
+        {
+            if (recvbuf[i] == 0)
+            {
+                SPIlength = i + 1;
                 break;
             }
         }
         uint8_t *spi2mesh_data = (uint8_t *)malloc(SPIlength + 8);
         bzero(spi2mesh_data, SPIlength + 8);
 
-        hjypackup(SPI, SPIlength, 0,0, recvbuf, spi2mesh_data);
+        hjypackup(SPI, SPIlength, 0, 0, recvbuf, spi2mesh_data);
 
         esp_err_t ret = ESP_OK;
 
@@ -458,8 +483,9 @@ static void node_read_task(void *arg)
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
 
-        // memcpy((uint16_t *)&NonRootID, data + 5, 2);
-        // NonRootID=ntohs(NonRootID);
+        memcpy((uint16_t *)&NonRootID, data + 5, 2);
+        NonRootID = ntohs(NonRootID);
+        printf("NonRootID : %d \n", NonRootID);
 
         // memcpy((int8_t *)&NonRootRssi, data + 7, 1);
 
@@ -468,18 +494,19 @@ static void node_read_task(void *arg)
 
         if (recv_header == 0xA55A)
         {
-            //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
-            //ESP_LOGI(TAG, "size is: %d", size);
+            // ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
+            // ESP_LOGI(TAG, "size is: %d", size);
             memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
             uint8_t *mesh_data = (uint8_t *)malloc(size - 8);
             memcpy(mesh_data, data + 8, size - 8);
-            
+
             if (meshmsgtype == UART)
             {
                 printf("UART:\n");
+                NMEA_GNGLL_Analysis((nmea_msg *)(&GPSinfo[NonRootID - 1]), mesh_data);
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
-                //hb_Ninfo[NonRootID-1].ifuart=1;
-                meshmsgtype=0;
+                // hb_Ninfo[NonRootID-1].ifuart=1;
+                meshmsgtype = 0;
                 free(mesh_data);
             }
             else if (meshmsgtype == SPI)
@@ -487,16 +514,18 @@ static void node_read_task(void *arg)
                 printf("SPI:\n");
                 flow_control_msg_t msg = {
                     .packet = mesh_data,
-                    .length = size-8};
+                    .length = size - 8};
                 if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
                 {
                     ESP_LOGE(TAG, "send SPI control message failed or timeout");
                     free(mesh_data);
                 }
-                //memcpy(sendbuf,mesh_data,size-8);
-                //hb_Ninfo[NonRootID-1].ifspi=1;
-                meshmsgtype=0;
-            }else{
+                // memcpy(sendbuf,mesh_data,size-8);
+                // hb_Ninfo[NonRootID-1].ifspi=1;
+                meshmsgtype = 0;
+            }
+            else
+            {
                 free(mesh_data);
             }
 
@@ -507,9 +536,9 @@ static void node_read_task(void *arg)
             // free(mesh_data);
             // printf("\n\r");
         }
-        else if(s_ethernet_is_connected)        /* forwoad to eth */
+        else if (s_ethernet_is_connected) /* forwoad to eth */
         {
-            //hb_Ninfo[NonRootID-1].ifeth=1; //要确认一下这个
+            // hb_Ninfo[NonRootID-1].ifeth=1; //要确认一下这个
             if (esp_eth_transmit(eth_handle, data, size) != ESP_OK)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
@@ -580,8 +609,9 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
-    if(len==100){
-        hjyctrl(buffer,len);
+    if (len == 100)
+    {
+        hjyctrl(buffer, len);
     }
     //         if (len){
     //     MDF_LOGI("ETH Downlinking...");
@@ -783,7 +813,7 @@ static esp_err_t initialize_flow_control(void)
         return ESP_FAIL;
     }
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+1,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 1,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, (tskIDLE_PRIORITY + 2), NULL);
     //  if (ret != pdTRUE)
@@ -809,34 +839,61 @@ static void hb_task(void *args)
     uint8_t *hb_msg = (uint8_t *)malloc(250);
     memset(hb_msg, 0, 250);
 
+    wifi_sta_list_t wifi_sta_list = {0x0};
+
     for (;;)
     {
+
+        for (int i = 0; i < wifi_sta_list.num; i++)
+        {
+            // MDF_LOGI("Child mac: " MACSTR, MAC2STR(wifi_sta_list.sta[i].mac));
+            // 根据mac地址来判断编号和是否连接，有连接更新每个连接子节点的上报值
+            for (int j = 0; j < 16; j++)
+            {
+                if (memcmp(wifi_sta_list.sta[i].mac, NONROOT_MAC[j], 6) == 0)
+                {
+                    hb_Ninfo[j].Connected = 1;
+                    hb_Ninfo[j].rssi = wifi_sta_list.sta[i].rssi;
+                    // hb_Ninfo[j].ifeth 在NodeRead里更新过了
+                    // hb_Ninfo[j].ifspi 在NodeRead里更新过了
+                    // hb_Ninfo[j].ifuart 在NodeRead里更新过了
+                    hb_Ninfo[j].GPSL = GPSinfo[j].longitude;
+                    hb_Ninfo[j].GPSA = GPSinfo[j].latitude;
+                    break;
+                }
+            }
+            // MDF_LOGI("RSSI: %d ",wifi_sta_list.sta[i].rssi);
+        }
         data_type.group = true;
+
+        esp_wifi_ap_get_sta_list(&wifi_sta_list);
+
         // sprintf(test14G, "ROOTHB number %04d.", n);
-        hb_msg[0]=hb_RorN;
-        hb_msg[1]=hb_ID;
-        hb_msg[2]=hb_Layer;
-        hb_msg[3]=hb_MorS;
-        hb_msg[4]=hb_SPIclk>>24;
-        hb_msg[5]=hb_SPIclk>>16;
-        hb_msg[6]=hb_SPIclk>>8;
-        hb_msg[7]=hb_SPIclk;
-        hb_msg[8]=hb_BaudRate>>24;
-        hb_msg[9]=hb_BaudRate>>16;
-        hb_msg[10]=hb_BaudRate>>8;
-        hb_msg[11]=hb_BaudRate;
-        hb_msg[12]=hb_Freq>>8;
-        hb_msg[13]=hb_Freq;
-        hb_msg[14]=hb_Route>>8;
-        hb_msg[15]=hb_Route;
-        for(int i=0;i<16;i++){
-            hb_msg[15+i*13]=hb_Ninfo[i].Connected;
-            hb_msg[16+i*13]=hb_Ninfo[i].rssi;
-            hb_msg[17+i*13]=hb_Ninfo[i].ifeth;
-            hb_msg[18+i*13]=hb_Ninfo[i].ifspi;
-            hb_msg[19+i*13]=hb_Ninfo[i].ifuart;
-            hb_msg[20+i*13]=hb_Ninfo[i].GPSL;
-            hb_msg[24+i*13]=hb_Ninfo[i].GPSA;
+        hb_msg[0] = hb_RorN;
+        hb_msg[1] = hb_ID;
+        hb_msg[2] = hb_Layer;
+        hb_msg[3] = hb_MorS;
+        hb_msg[4] = hb_SPIclk >> 24;
+        hb_msg[5] = hb_SPIclk >> 16;
+        hb_msg[6] = hb_SPIclk >> 8;
+        hb_msg[7] = hb_SPIclk;
+        hb_msg[8] = hb_BaudRate >> 24;
+        hb_msg[9] = hb_BaudRate >> 16;
+        hb_msg[10] = hb_BaudRate >> 8;
+        hb_msg[11] = hb_BaudRate;
+        hb_msg[12] = hb_Freq >> 8;
+        hb_msg[13] = hb_Freq;
+        hb_msg[14] = hb_Route >> 8;
+        hb_msg[15] = hb_Route;
+        for (int i = 0; i < 16; i++)
+        {
+            hb_msg[15 + i * 13] = hb_Ninfo[i].Connected;
+            hb_msg[16 + i * 13] = hb_Ninfo[i].rssi;
+            hb_msg[17 + i * 13] = hb_Ninfo[i].ifeth;
+            hb_msg[18 + i * 13] = hb_Ninfo[i].ifspi;
+            hb_msg[19 + i * 13] = hb_Ninfo[i].ifuart;
+            hb_msg[20 + i * 13] = hb_Ninfo[i].GPSL;
+            hb_msg[24 + i * 13] = hb_Ninfo[i].GPSA;
         }
         msg.packet = hb_msg;
         msg.length = 250;
@@ -858,14 +915,15 @@ static void hb_task(void *args)
             // MDF_LOGI("ETH Heatbeading");
         }
 
-        for(int i=0;i<16;i++){
-            hb_Ninfo[i].Connected=0;
-            hb_Ninfo[i].rssi=0;
-            hb_Ninfo[i].ifeth=0;
-            hb_Ninfo[i].ifspi=0;
-            hb_Ninfo[i].ifuart=0;
-            hb_Ninfo[i].GPSL=0;
-            hb_Ninfo[i].GPSA=0;
+        for (int i = 0; i < 16; i++)
+        {
+            hb_Ninfo[i].Connected = 0;
+            hb_Ninfo[i].rssi = 0;
+            hb_Ninfo[i].ifeth = 0;
+            hb_Ninfo[i].ifspi = 0;
+            hb_Ninfo[i].ifuart = 0;
+            hb_Ninfo[i].GPSL = 0;
+            hb_Ninfo[i].GPSA = 0;
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -887,7 +945,6 @@ void app_main()
      */
     esp_log_level_set("*", ESP_LOG_INFO);
     esp_log_level_set(TAG, ESP_LOG_DEBUG);
-
 
     /**
      * @brief Initialize wifi mesh.
@@ -921,7 +978,7 @@ void app_main()
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
     MDF_ERROR_ASSERT(mwifi_start());
 
-        /* uart initialization */
+    /* uart initialization */
     MDF_ERROR_ASSERT(uart_initialize());
 
     /**
@@ -946,7 +1003,7 @@ void app_main()
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+2,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 2,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
@@ -962,9 +1019,9 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
-               NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    // xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

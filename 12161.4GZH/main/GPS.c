@@ -84,6 +84,8 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx,uint8_t *buf)
   
   p1 = (uint8_t*)strstr((const char *)buf,"GNGLL"); //GNGLL
   
+  if(p1 == NULL) return;
+  
   posx=NMEA_Comma_Pos(p1, 5);                //得到UTC时间  hhmmss.ss
   if(posx!=0XFF)
   {

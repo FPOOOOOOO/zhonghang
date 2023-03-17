@@ -778,7 +778,7 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 ## <span id = "86">0228</span>
 1、又做了一块新板子，8号，看一下性能\
 2、为什么iperf和rssi这么相关\
-看一下是不是收发函数影响到了，用2.4G看看是不是能收上来\
+看一下是不是收发函数影响到了（1.4G iperf 1对多），用2.4G看看是不是能收上来\
 如果上面没有的话，那就是无线和无线之间功率不太一致。
 还可以试一下直连的iperf
 
@@ -801,7 +801,7 @@ I (643521) mesh: <MESH_NWK_LOOK_FOR_NETWORK>need_scan:0x2, need_scan_router:0x0,
 6、2.4Gmesh iperf 1对1，1对多
 
 ## <span id = "90">230307</span>
-1、2.4G直连iperf 1对多 只能用MAC当server，试过了不行;
+1、2.4G直连iperf 1对多 只能用MAC当server，试过了不行,总速度被占用了;
 2、1.4Gmesh iperf 1对1 5M; 1对多 4M没上去;
 3、2.4G直连iperf 1对1:\
 黑垫做AP 192.168.4.1 server
@@ -845,4 +845,11 @@ MAC  192.168.4.4 30M
 3号 192.168.4.2 12.84M
 5号 192.168.4.3 11.68M
 
-3、2.4G mesh iperf 1对多:
+## <span id = "91">230309</span>
+1、2.4G mesh iperf 1对2 能够上到14M，但是也不是很稳定（复现性不够强），大部分在10M\
+2、上位机：好像从机发来的RSSI和ID不用通过hjypackup
+3、SPI
+
+## <span id = "92">230317</span>
+1、ESP端：参数写入flash 重启
+2、PC端：各个页面之间展示

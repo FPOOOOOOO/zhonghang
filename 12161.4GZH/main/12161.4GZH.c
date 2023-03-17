@@ -328,7 +328,8 @@ static void spi_task(void *pvParameters)
     memset(recvbuf, 0, 129);
     memset(sendbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
-
+    flow_control_msg_t SPI_msg;
+    
     while (1)
     {
         // Clear receive buffer, set send buffer to something sane
@@ -344,7 +345,7 @@ static void spi_task(void *pvParameters)
         // ESP_LOGE(TAG, "I am 4");
         //  Set up a transaction of 128 bytes to send/receive
 
-        flow_control_msg_t SPI_msg;
+
         if (xQueueReceive(SPI_control_queue, &SPI_msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
         {
             memcpy(sendbuf, SPI_msg.packet, SPI_msg.length);
