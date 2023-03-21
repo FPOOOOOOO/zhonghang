@@ -130,6 +130,7 @@ void NMEA_GNGLL_Analysis(nmea_msg *gpsx, uint8_t *buf)
     rs = temp % NMEA_Pow(10, dx + 2);                                                     // 得到'
     gpsx->latitude = gpsx->latitude * NMEA_Pow(10, 5) + (rs * NMEA_Pow(10, 5 - dx)) / 60; // 转换为°
   }
+  
   posx = NMEA_Comma_Pos(p1, 2); // 南纬还是北纬
   if (posx != 0XFF)
     gpsx->nshemi = *(p1 + posx);
