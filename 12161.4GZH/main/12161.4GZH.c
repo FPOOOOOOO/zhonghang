@@ -131,13 +131,14 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t connecte
 static void hjyctrl(void *buffer,uint16_t len){
     //for now lack route
     uint8_t *data;
-    data=(uint8_t *)buffer;
-    hb_RorN = data[0]; //主从
-    hb_ID =  data[1];//本机的编号
-    hb_MorS =  data[2]; //Slave
-    hb_Freq =  data[3]<<8 &  data[4];
-    hb_SPIclk =  data[5]<<24 & data[6]<<16 &  data[7]<<8 & data[8];//8M
-    hb_BaudRate =  data[9]<<24 &  data[10]<<16 &  data[11]<<8 & data[12];
+    data = (uint8_t *)buffer;
+    hb_RorN = data[0]; // 主从
+    hb_ID = data[1];   // 本机的编号
+    hb_MorS = data[2]; // Slave
+    hb_Freq = data[3] << 8 | data[4];
+    hb_SPIclk = data[5] << 24 | data[6] << 16 | data[7] << 8 | data[8]; // 8M
+    hb_BaudRate = data[9] << 24 | data[10] << 16 | data[11] << 8 | data[12];
+    printf("NonRoot CTRL:%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
 }
 
 /**
@@ -677,6 +678,10 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     flow_control_msg_t msg = {
         .packet = buffer,
         .length = len};
+    if (len == 100)
+    {
+        hjyctrl(buffer, len);
+    }
     // if (len){
     //     MDF_LOGI("ETH Downlinking...");
     // }
@@ -1072,5 +1077,5 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
-    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

@@ -153,7 +153,7 @@ static void hjyctrl(void *buffer, uint16_t len)
     hb_Freq = data[3] << 8 | data[4];
     hb_SPIclk = data[5] << 24 | data[6] << 16 | data[7] << 8 | data[8]; // 8M
     hb_BaudRate = data[9] << 24 | data[10] << 16 | data[11] << 8 | data[12];
-    printf("%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
+    printf("Root CTRL:%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
 }
 
 /**
@@ -1023,5 +1023,5 @@ void app_main()
 
     // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    // xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
