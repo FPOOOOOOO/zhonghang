@@ -67,7 +67,7 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_ID = 7;     // 本机的编号
+static uint8_t hb_ID = 10;     // 本机的编号
 static uint8_t hb_Layer = 2;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M
@@ -1037,8 +1037,8 @@ void app_main()
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));

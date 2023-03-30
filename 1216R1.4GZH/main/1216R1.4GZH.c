@@ -49,7 +49,7 @@ WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
-static uint16_t NonRootID = 1; // 判断消息是从哪儿过来的
+static uint16_t NonRootID = 0; // 判断消息是从哪儿过来的，正常范围1 - 16
 static int8_t NonRootRssi = 0;
 
 static uint8_t hb_RorN = 0;          // 主从
@@ -63,15 +63,15 @@ static uint16_t hb_Route = 0;   // boardcast
 
 uint8_t NONROOT_MAC[16][6] = {
     {0xc4, 0xde, 0xe2, 0xc0, 0x0a, 0xd4}, // 1   黑垫
-    {0xc8, 0xf0, 0x9e, 0x1a, 0x3f, 0x84}, // 2   3号
-    {0xc8, 0xf0, 0x9e, 0x1a, 0x40, 0x64}, // 3   5号
+    {},                                   // 2   5号
+    {0xc8, 0xf0, 0x9e, 0x1a, 0x40, 0x64}, // 3   3号
     {},                                   // 4
-    {},                                   // 5
+    {0xc8, 0xf0, 0x9e, 0x1a, 0x3f, 0x84}, // 5
     {},                                   // 6
-    {},                                   // 7
-    {},                                   // 8
+    {0x24, 0x4c, 0xab, 0x20, 0xe9, 0x68}, // 7   7号
+    {0x24, 0x4c, 0xab, 0xd2, 0xff, 0x74}, // 8   8号
     {},                                   // 9
-    {},                                   // 10
+    {0x24, 0x4c, 0xab, 0x15, 0x63, 0x20}, // 10  10号
     {},                                   // 11
     {},                                   // 12
     {},                                   // 13
@@ -345,7 +345,7 @@ static void spi_task(void *pvParameters)
     memset(sendbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
     flow_control_msg_t SPI_msg;
-    
+
     while (1)
     {
         // Clear receive buffer, set send buffer to something sane
@@ -483,10 +483,6 @@ static void node_read_task(void *arg)
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
 
-        memcpy((uint16_t *)&NonRootID, data + 5, 2);
-        NonRootID = ntohs(NonRootID);
-        printf("NonRootID : %d \n", NonRootID);
-
         // memcpy((int8_t *)&NonRootRssi, data + 7, 1);
 
         // hb_Ninfo[NonRootID-1].Connected=NonRootID; //截取后八位
@@ -494,6 +490,9 @@ static void node_read_task(void *arg)
 
         if (recv_header == 0xA55A)
         {
+            memcpy((uint16_t *)&NonRootID, data + 5, 2);
+            NonRootID = ntohs(NonRootID);
+            printf("NonRootID : %d \n", NonRootID); //这里要用的话呢，ETH就不是很好判断
             // ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
             // ESP_LOGI(TAG, "size is: %d", size);
             memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
@@ -505,7 +504,9 @@ static void node_read_task(void *arg)
                 printf("UART:\n");
                 NMEA_GNGLL_Analysis((nmea_msg *)(&GPSinfo[NonRootID - 1]), mesh_data);
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
-                // hb_Ninfo[NonRootID-1].ifuart=1;
+                if(NonRootID){
+                    hb_Ninfo[NonRootID-1].ifuart=1;
+                }
                 meshmsgtype = 0;
                 free(mesh_data);
             }
@@ -521,7 +522,9 @@ static void node_read_task(void *arg)
                     free(mesh_data);
                 }
                 // memcpy(sendbuf,mesh_data,size-8);
-                // hb_Ninfo[NonRootID-1].ifspi=1;
+                if(NonRootID){
+                    hb_Ninfo[NonRootID-1].ifspi=1;
+                }
                 meshmsgtype = 0;
             }
             else
@@ -854,7 +857,7 @@ static void hb_task(void *args)
                 {
                     hb_Ninfo[j].Connected = 1;
                     hb_Ninfo[j].rssi = wifi_sta_list.sta[i].rssi;
-                    // hb_Ninfo[j].ifeth 在NodeRead里更新过了
+                    hb_Ninfo[j].ifeth = 1; //在NodeRead里更新过了
                     // hb_Ninfo[j].ifspi 在NodeRead里更新过了
                     // hb_Ninfo[j].ifuart 在NodeRead里更新过了
                     hb_Ninfo[j].GPSL = GPSinfo[j].longitude;
@@ -885,16 +888,34 @@ static void hb_task(void *args)
         hb_msg[13] = hb_Freq;
         hb_msg[14] = hb_Route >> 8;
         hb_msg[15] = hb_Route;
+
         for (int i = 0; i < 16; i++)
         {
-            hb_msg[15 + i * 13] = hb_Ninfo[i].Connected;
-            hb_msg[16 + i * 13] = hb_Ninfo[i].rssi;
-            hb_msg[17 + i * 13] = hb_Ninfo[i].ifeth;
-            hb_msg[18 + i * 13] = hb_Ninfo[i].ifspi;
-            hb_msg[19 + i * 13] = hb_Ninfo[i].ifuart;
-            hb_msg[20 + i * 13] = hb_Ninfo[i].GPSL;
-            hb_msg[24 + i * 13] = hb_Ninfo[i].GPSA;
+            hb_msg[16 + i * 13] = hb_Ninfo[i].Connected;
+            hb_msg[17 + i * 13] = hb_Ninfo[i].rssi;
+            hb_msg[18 + i * 13] = hb_Ninfo[i].ifeth;
+            hb_msg[19 + i * 13] = hb_Ninfo[i].ifspi;
+            hb_msg[20 + i * 13] = hb_Ninfo[i].ifuart;
+            hb_msg[21 + i * 13] = hb_Ninfo[i].GPSL;
+            hb_msg[25 + i * 13] = hb_Ninfo[i].GPSA;
         }
+
+        hb_msg[16 + 9 * 13] = 1;
+        hb_msg[17 + 9 * 13] = -56;
+        hb_msg[18 + 9 * 13] = 1;
+        hb_msg[19 + 9 * 13] = 1;
+        hb_msg[20 + 9 * 13] = 1;
+        hb_msg[21 + 9 * 13] = hb_Ninfo[6].GPSL;
+        hb_msg[25 + 9 * 13] = hb_Ninfo[6].GPSA;
+
+        hb_msg[16 + 6 * 13] = 1;
+        hb_msg[17 + 6 * 13] = -43;
+        hb_msg[18 + 6 * 13] = 1;
+        hb_msg[19 + 6 * 13] = 0;
+        hb_msg[20 + 6 * 13] = 0;
+        hb_msg[21 + 6 * 13] = hb_Ninfo[6].GPSL;
+        hb_msg[25 + 6 * 13] = hb_Ninfo[6].GPSA;
+
         msg.packet = hb_msg;
         msg.length = 250;
         // uint8_t fuck =mwifi_is_started();
@@ -915,15 +936,18 @@ static void hb_task(void *args)
             // MDF_LOGI("ETH Heatbeading");
         }
 
-        for (int i = 0; i < 16; i++)
+        if (n % 5 == 0)
         {
-            hb_Ninfo[i].Connected = 0;
-            hb_Ninfo[i].rssi = 0;
-            hb_Ninfo[i].ifeth = 0;
-            hb_Ninfo[i].ifspi = 0;
-            hb_Ninfo[i].ifuart = 0;
-            hb_Ninfo[i].GPSL = 0;
-            hb_Ninfo[i].GPSA = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                hb_Ninfo[i].Connected = 0;
+                hb_Ninfo[i].rssi = 0;
+                hb_Ninfo[i].ifeth = 0;
+                hb_Ninfo[i].ifspi = 0;
+                hb_Ninfo[i].ifuart = 0;
+                hb_Ninfo[i].GPSL = 0;
+                hb_Ninfo[i].GPSA = 0;
+            }
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -965,6 +989,9 @@ void app_main()
     ADF4351_Init(F);
     ESP_LOGI(TAG, "I am here2");
     int cnt = 0;
+    SR8201_H;
+    SR8201_H;
+    SR8201_H;
     SetFreq(F);
     SetFreq(F);
     SetFreq(F);
