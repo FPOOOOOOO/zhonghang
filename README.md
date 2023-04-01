@@ -884,6 +884,27 @@ router信息。
 3、10R7N不稳定，7R3N稳定
 4、结构体内存没有紧密排列
 
-## <span id = "95">230330</span>
+## <span id = "96">230330</span>
 1、GPS要用RMC，是差分综合以后的
-2、
+
+## <span id = "97">230331</span>
+1、紫板 Brownout，换了块电池，brownout得更快了
+2、锁相环没锁上是晶振问题
+3、无LO，12V 0.24A
+4、
+Guru Meditation Error: Core  0 panic'ed (LoadProhibited). Exception was unhandled.
+
+Core  0 register dump:
+PC      : 0x400f62b6  PS      : 0x00060c30  A0      : 0x800d712e  A1      : 0x3ffafb30  
+A2      : 0x3ffb3ea8  A3      : 0x3ffb3ef5  A4      : 0x00000000  A5      : 0x3ffbdc54  
+A6      : 0x0101800a  A7      : 0x00000002  A8      : 0x00000000  A9      : 0x3ffafb00  
+A10     : 0x00000001  A11     : 0x00000000  A12     : 0x3ffbe6b0  A13     : 0x00000000  
+A14     : 0x00000000  A15     : 0x00000001  SAR     : 0x0000001f  EXCCAUSE: 0
+[11:53:0:728]Rx←?x0000001c  
+EXCVADDR: 0x00000048  LBEG    : 0x4000c2e0  LEND    : 0x4000c2f6  LCOUNT  : 0x00000000  
+
+
+Backtrace:0x400f62b3:0x3ffafb300x400d712b:0x3ffafb60 0x400d61bb:0x3ffafb90 0x401441a7:0x3ffafc90 0x4008b4b9:0x3ffafcb0 
+
+失误：注释错误
+5、加了以太网就不行

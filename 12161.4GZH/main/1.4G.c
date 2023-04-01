@@ -3,7 +3,7 @@
 
 
 static xQueueHandle gpio_evt_queue = NULL;
-uint32_t R = 100;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
+uint32_t R = 125;   // R为参考分配器的数值，计算公式：输入频率/（2*R）=0.1
                     // 注：输入频率的单位为MHz，R的范围为0~1023的整数
                     // 默认输入频率为板载25M晶振，故得R为125。
                     // 板载40M晶振，则R=200
@@ -79,10 +79,6 @@ void GPIO_INIT(void)
     // gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void *)GPIO_INPUT_IO_0);
 
     printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
-
-    SR8201_L;
-    SR8201_L;
-    SR8201_L;
 }
 
 //-----------------------------------------------------------------

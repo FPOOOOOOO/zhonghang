@@ -710,7 +710,10 @@ static mdf_err_t eth_init()
     // esp_netif_config_t eth_cfg = ESP_NETIF_DEFAULT_ETH();
     // esp_netif_t *eth_netif = esp_netif_new(&eth_cfg);
     // MDF_ERROR_ASSERT(esp_eth_set_default_handlers(eth_netif));
-
+    SR8201_H;
+    SR8201_H;
+    SR8201_H;
+    vTaskDelay(1 / portTICK_RATE_MS);
     MDF_ERROR_ASSERT(esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, NULL));
     // MDF_ERROR_ASSERT(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &ip_event_handler, NULL));
 
@@ -989,17 +992,14 @@ void app_main()
     ADF4351_Init(F);
     ESP_LOGI(TAG, "I am here2");
     int cnt = 0;
-    SR8201_H;
-    SR8201_H;
-    SR8201_H;
     SetFreq(F);
     SetFreq(F);
     SetFreq(F);
 
     MDF_ERROR_ASSERT(esp_netif_init());
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(initialize_flow_control());
-    MDF_ERROR_ASSERT(eth_init());
+    //ESP_ERROR_CHECK(initialize_flow_control());
+    //MDF_ERROR_ASSERT(eth_init());
     MDF_ERROR_ASSERT(wifi_init());
     MDF_ERROR_ASSERT(mwifi_init(&cfg));
     MDF_ERROR_ASSERT(mwifi_set_config(&config));
@@ -1050,5 +1050,5 @@ void app_main()
 
     // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
-    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

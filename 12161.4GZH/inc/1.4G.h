@@ -8,12 +8,12 @@
 #define GPIO_OUTPUT_IO_2 2  // MOSI
 #define GPIO_OUTPUT_IO_3 32 // CLK
 
-#define GPIO_OUTPUT_8201 17 //8201 boot later
+#define GPIO_OUTPUT_8201 5 //8201 boot later
 
 #define GPIO_OUTPUT_PIN_SEL ((1ULL << GPIO_OUTPUT_IO_0) | (1ULL << GPIO_OUTPUT_IO_1) | (1ULL << GPIO_OUTPUT_IO_2) | (1ULL << GPIO_OUTPUT_IO_3)| (1ULL << GPIO_OUTPUT_8201))
-#define GPIO_INPUT_IO_0 34
-#define GPIO_INPUT_IO_1 5
-#define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
+// #define GPIO_INPUT_IO_0 34
+// #define GPIO_INPUT_IO_1 5
+// #define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
 #define ESP_INTR_FLAG_DEFAULT 0
 
 #define ADF_CE_Set (gpio_set_level(GPIO_OUTPUT_IO_0, 1))
