@@ -911,3 +911,7 @@ Backtrace:0x400f62b3:0x3ffafb300x400d712b:0x3ffafb60 0x400d61bb:0x3ffafb90 0x401
 
 ## <span id = "98">230401</span>
 1、8V加以太网可以？
+
+
+## <span id = "99">230402</span>
+1、紫板 7号，-40的时候1.5M，+6dB衰减 -60的时候3M

@@ -1043,9 +1043,9 @@ void app_main()
     MDF_ERROR_ASSERT(esp_event_loop_create_default());
     ESP_LOGI(TAG, "77777");
 
-    //ESP_ERROR_CHECK(initialize_flow_control());
+    ESP_ERROR_CHECK(initialize_flow_control());
     ESP_LOGI(TAG, "88888");
-    //MDF_ERROR_ASSERT(eth_init());
+    MDF_ERROR_ASSERT(eth_init());
 
     MDF_ERROR_ASSERT(wifi_init());
     ESP_LOGI(TAG, "99999");
@@ -1088,5 +1088,5 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
-    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
