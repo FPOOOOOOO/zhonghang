@@ -1088,5 +1088,5 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
-    xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
