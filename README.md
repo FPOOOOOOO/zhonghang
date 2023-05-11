@@ -919,4 +919,19 @@ Backtrace:0x400f62b3:0x3ffafb300x400d712b:0x3ffafb60 0x400d61bb:0x3ffafb90 0x401
 ## <span id = "100">230404</span>
 1、测试结果见相册\
 2、受不了一点这个，太拉了\
-3、
+
+## <span id = "101">230406</span>
+1、准备试一下一拖二
+
+## <span id = "102">230412</span>
+1、N12 init phy failed, wrong chip ID，容易进download，插电才能启动
+2、N13 进download，插电启动不了,以太网没问题
+3、串口没反应
+
+## <span id = "103">230508</span>
+1、要测试一下多个板子的入网。N2、N3reset download模式、N4稍微好一点，一半download一半正常启动\
+2、
+
+## <span id = "103">230511</span>
+1、线到了，进行一个焊接和测试\
+2、
