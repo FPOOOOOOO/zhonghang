@@ -934,4 +934,7 @@ Backtrace:0x400f62b3:0x3ffafb300x400d712b:0x3ffafb60 0x400d61bb:0x3ffafb90 0x401
 
 ## <span id = "103">230511</span>
 1、线到了，进行一个焊接和测试\
+
+## <span id = "103">230515</span>
+1、先看看每个编号能不能和1（ROOT）连接\
 2、
