@@ -948,4 +948,154 @@ Backtrace:0x400f62b3:0x3ffafb300x400d712b:0x3ffafb60 0x400d61bb:0x3ffafb90 0x401
 5°¢’“2.4GµƒÃÏœﬂø¥“ªœ¬
 
 ## <span id = "107">230516</span>
-1°¢
+1°¢2.4G£¨8∏ˆÕÍ»´√ªŒ Ã‚æÕ «Àµ\
+```
+I (15482) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (15482) wifi:station: b0:b2:1c:8f:91:e8 join, AID=1, bgn, 40D
+[0;32mI (15484) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (15486) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 2[0m
+[0;32mI (15498) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (15504) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (15509) [eth2mesh, 811]: Child is connected on ap interface[0m
+I (26955) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (26955) wifi:station: b0:b2:1c:8f:93:d8 join, AID=2, bgn, 40D
+[0;32mI (26957) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (26959) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 3[0m
+[0;32mI (26972) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (26977) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (26982) [eth2mesh, 811]: Child is connected on ap interface[0m
+I (38013) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (38013) wifi:station: b0:b2:1c:8f:92:d8 join, AID=3, bgn, 40D
+[0;32mI (38014) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (38015) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 4[0m
+[0;32mI (38029) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (38035) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (38040) [eth2mesh, 811]: Child is connected on ap interface[0m
+I (105192) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (105192) wifi:station: b0:b2:1c:8f:92:f8 join, AID=4, bgn, 40D
+I (105194) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (105199) wifi:station: b0:b2:1c:8f:93:14 join, AID=5, bgn, 40D
+[0;32mI (105206) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (105208) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 5[0m
+[0;32mI (105221) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (105226) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (105228) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 6[0m
+[0;32mI (105242) [eth2mesh, 811]: Child is connected on ap interface[0m
+[0;32mI (105249) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (105254) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (105260) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (105265) [eth2mesh, 811]: Child is connected on ap interface[0m
+I (130685) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (130685) wifi:station: b0:b2:1c:8f:93:c4 join, AID=6, bgn, 40D
+[0;32mI (130687) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+I (130691) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+I (130698) wifi:station: b0:b2:1c:8f:93:50 join, AID=7, bgn, 40D
+[0;32mI (130689) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 7[0m
+[0;32mI (130714) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (130719) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (130721) [mwifi, 243]: Routing table is changed by adding newly joined children add_num: 1, total_num: 8[0m
+[0;32mI (130735) [eth2mesh, 811]: Child is connected on ap interface[0m
+[0;32mI (130742) [eth2mesh, 786]: event_loop_cb, event: 25[0m
+[0;32mI (130747) [eth2mesh, 786]: event_loop_cb, event: 5[0m
+[0;32mI (130753) [eth2mesh, 786]: event_loop_cb, event: 3[0m
+[0;32mI (130758) [eth2mesh, 811]: Child is connected on ap interface[0m
+I (193800) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (193800) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (195010) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (195011) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (196198) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (196199) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (197400) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (197401) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (198618) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (198619) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (199806) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (199807) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+I (200996) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (200997) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:1, <max:128 = cfg:128 + extra:0>tods:0
+W (201187) wifi:inactive timer: now=bcd6512 last_rx_time=9fdbde2 diff=76b1, aid[4]b0:b2:1c:8f:92:f8 leave
+I (201188) wifi:station: b0:b2:1c:8f:92:f8 leave, AID = 4, bss_flags is 134243, bss:0x3ffdc324
+I (201194) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+W (201200) wifi:inactive timer: now=bcd98b4 last_rx_time=9fe214a diff=76a5, aid[5]b0:b2:1c:8f:93:14 leave
+I (201209) wifi:station: b0:b2:1c:8f:93:14 leave, AID = 5, bss_flags is 134243, bss:0x3ffde8a0
+I (201218) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+[0;32mI (201225) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 7[0m
+[0;32mI (201225) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (201237) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 6[0m
+[0;32mI (201250) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+[0;32mI (201257) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+[0;32mI (201262) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (201268) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+[0;32mI (201274) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+[0;33mW (201282) [mwifi, 707]: <ESP_ERR_MESH_DISCONNECTED> Node failed to send packets, dest_addr: b0:b2:1c:8f:92:f8, flag: 0x02, opt->type: 0x08, opt->len: 13, data->tos: 0, data: 0x3ffddc48, size: 66[0m
+[0;33mW (201298) [mwifi, 806]: <ESP_ERR_MESH_DISCONNECTED> Root node failed to send packets, dest_mac: b0:b2:1c:8f:92:f8[0m
+[0;33mW (201309) [mwifi, 1090]: <ESP_ERR_MESH_DISCONNECTED> mwifi_root_write, size: 66[0m
+[0;33mW (201317) [eth2mesh, 501]: <ESP_ERR_MESH_DISCONNECTED> mwifi_read[0m
+W (202680) wifi:inactive timer: now=be42c5a last_rx_time=a1477ef diff=76b5, aid[6]b0:b2:1c:8f:93:c4 leave
+I (202680) wifi:station: b0:b2:1c:8f:93:c4 leave, AID = 6, bss_flags is 134243, bss:0x3ffdeba4
+I (202687) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+W (202693) wifi:inactive timer: now=be4601a last_rx_time=a14d998 diff=76a9, aid[7]b0:b2:1c:8f:93:50 leave
+I (202702) wifi:station: b0:b2:1c:8f:93:50 leave, AID = 7, bss_flags is 134243, bss:0x3ffdeea8
+I (202711) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+[0;32mI (202717) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (202718) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 5[0m
+[0;32mI (202732) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+[0;32mI (202734) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 4[0m
+[0;32mI (202749) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+[0;32mI (202755) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (202760) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+[0;32mI (202767) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+I (212751) mesh: [scan]new scanning time:600ms, beacon interval:300ms
+I (220559) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (220559) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+I (221803) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (221803) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+W (222008) wifi:inactive timer: now=d0b18ad last_rx_time=b2caab5 diff=7a7a, aid[3]b0:b2:1c:8f:92:d8 leave
+I (222008) wifi:station: b0:b2:1c:8f:92:d8 leave, AID = 3, bss_flags is 134243, bss:0x3ffaee50
+I (222015) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+[0;32mI (222022) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (222023) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 3[0m
+[0;32mI (222037) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+I (222038) mesh: [scan]new scanning time:300ms, beacon interval:100ms
+[0;32mI (222044) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+I (222989) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (222989) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+I (224155) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (224155) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+I (225382) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (225383) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+I (226686) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (226687) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+I (227756) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (227756) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+W (228952) wifi:inactive timer: now=d750bbe last_rx_time=b9694b6 diff=7a7c, aid[2]b0:b2:1c:8f:93:d8 leave
+I (228952) wifi:station: b0:b2:1c:8f:93:d8 leave, AID = 2, bss_flags is 134243, bss:0x3ffafb68
+I (228958) wifi:new:<12,2>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+[0;32mI (228965) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (228966) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 2[0m
+[0;32mI (228980) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+[0;32mI (228987) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+I (228993) mesh: [TXQ]<max:128>up(0, be:0), down(0, be:0), mgmt:0, xon(req:0, rsp:16), bcast:0, wnd(0, parent:00:00:00:00:00:00)
+I (229004) mesh: [RXQ]<max:128 = cfg:128 + extra:0>self:0, <max:128 = cfg:128 + extra:0>tods:0
+[0;33mW (229013) [mwifi, 707]: <ESP_ERR_MESH_DISCONNECTED> Node failed to send packets, dest_addr: b0:b2:1c:8f:93:d8, flag: 0x02, opt->type: 0x08, opt->len: 13, data->tos: 0, data: 0x3ffde38c, size: 66[0m
+[0;33mW (229030) [mwifi, 806]: <ESP_ERR_MESH_DISCONNECTED> Root node failed to send packets, dest_mac: b0:b2:1c:8f:93:d8[0m
+[0;33mW (229041) [mwifi, 1090]: <ESP_ERR_MESH_DISCONNECTED> mwifi_root_write, size: 66[0m
+[0;33mW (229049) [eth2mesh, 501]: <ESP_ERR_MESH_DISCONNECTED> mwifi_read[0m
+I (238981) mesh: [scan]new scanning time:600ms, beacon interval:300ms
+[0;32mI (251003) eth2mesh: Ethernet Link Down[0m
+W (289479) wifi:inactive timer: now=11109eb5 last_rx_time=f344bfb diff=79f0, aid[1]b0:b2:1c:8f:91:e8 leave
+I (289479) wifi:station: b0:b2:1c:8f:91:e8 leave, AID = 1, bss_flags is 134243, bss:0x3ffaf458
+I (289486) wifi:new:<12,0>, old:<12,2>, ap:<12,2>, sta:<0,0>, prof:12
+[0;32mI (289493) [eth2mesh, 786]: event_loop_cb, event: 4[0m
+[0;32mI (289493) [mwifi, 252]: Routing table is changed by removing leave children remove_num: 1, total_num: 1[0m
+[0;32mI (289508) [eth2mesh, 817]: Child is disconnected on ap interface[0m
+I (289510) mesh: [scan]new scanning time:300ms, beacon interval:100ms
+[0;32mI (289515) [eth2mesh, 786]: event_loop_cb, event: 6[0m
+I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
+
+```
+
+
+## <span id = "108">230524</span>
+1°¢2∫≈“‘Ã´Õ¯0%°¢3∫≈“‘Ã´Õ¯85%°¢4∫≈60%°¢5∫≈…œµÁ√ª∆Ù∂Ø°¢6∫≈…œµÁ√ª∆Ù∂Ø°¢7∫≈95%°¢8∫≈100%°¢9∫≈100%°¢11∫≈100% \
+2°¢ªπ”–º∏∏ˆ√ª∫√µƒΩ⁄µ„ƒÿ£¨’Ê «∑˛¡À£¨≤‚∏ˆJB\
