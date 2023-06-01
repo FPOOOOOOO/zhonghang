@@ -1124,4 +1124,5 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 13、14：串口有问题，没有数据
 
 ## <span id = "109">230531</span>
-1、
+1、SPI单端到电脑好像也不是很好使的样子nnd\
+2、

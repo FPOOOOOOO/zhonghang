@@ -534,19 +534,22 @@ static void node_read_task(void *arg)
             else if (meshmsgtype == SPI)
             {
                 printf("SPI:\n");
-                flow_control_msg_t msg = {
-                    .packet = mesh_data,
-                    .length = size - 8};
-                if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
-                {
-                    ESP_LOGE(TAG, "send SPI control message failed or timeout");
-                    free(mesh_data);
-                }
-                // memcpy(sendbuf,mesh_data,size-8);
-                if(NonRootID){
-                    hb_Ninfo[NonRootID-1].ifspi=1;
-                }
+                uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
                 meshmsgtype = 0;
+                free(mesh_data);
+                // flow_control_msg_t msg = {
+                //     .packet = mesh_data,
+                //     .length = size - 8};
+                // if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
+                // {
+                //     ESP_LOGE(TAG, "send SPI control message failed or timeout");
+                //     free(mesh_data);
+                // }
+                // // memcpy(sendbuf,mesh_data,size-8);
+                // if(NonRootID){
+                //     hb_Ninfo[NonRootID-1].ifspi=1;
+                // }
+                // meshmsgtype = 0;
             }
             else
             {
@@ -1069,7 +1072,7 @@ void app_main()
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
 
-    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
 
     //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
