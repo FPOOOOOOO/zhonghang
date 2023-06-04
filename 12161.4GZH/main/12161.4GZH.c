@@ -67,7 +67,7 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_ID = 4;     // 本机的编号
+static uint8_t hb_ID = 12;     // 本机的编号
 static uint8_t hb_Layer = 3;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M
@@ -95,8 +95,11 @@ static uint8_t meshmsgtype = 0;
 // uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
 // uint8_t *sendbuf = (uint8_t *)MDF_MALLOC(129);
 
-static uint8_t recvbuf[129];
-static uint8_t sendbuf[129];
+// static uint8_t recvbuf[129];
+// static uint8_t sendbuf[129];
+
+char sendbuf[129] = {0};
+char recvbuf[129] = {0}; //20230601，为了和主从机保持一致
 
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
@@ -386,7 +389,7 @@ static void spi_task(void *pvParameters)
 
         // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         // received data from the master. Print it.
-        printf(" %d Received: %s\n", n, recvbuf);
+        // printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
 
         uint8_t SPIlength = 0;
@@ -531,104 +534,6 @@ static void node_read_task(void *arg)
     MDF_FREE(data);
     vTaskDelete(NULL);
 }
-
-// static void node_read_task(void *arg)
-// {
-//     mdf_err_t ret = MDF_OK;
-//     char *data = MDF_MALLOC(MWIFI_PAYLOAD_LEN);
-//     size_t size = MWIFI_PAYLOAD_LEN;
-//     mwifi_data_type_t data_type = {0x0};
-//     uint8_t src_addr[MWIFI_ADDR_LEN] = {0x0};
-
-//     uint8_t *buffer = NULL;
-//     size_t buffer_len = 0;
-
-//     MDF_LOGI("Node read task is running");
-
-//     for (;;)
-//     {
-//         if (!mwifi_is_connected() && !(mwifi_is_started() && esp_mesh_is_root()))
-//         {
-//             vTaskDelay(500 / portTICK_RATE_MS);
-//             continue;
-//         }
-
-//         size = MWIFI_PAYLOAD_LEN;
-//         memset(data, 0, MWIFI_PAYLOAD_LEN);
-
-//         /**
-//          * @brief Pre-allocated memory to data and size must be specified when passing in a level 1 pointer
-//          */
-//         ret = mwifi_read(src_addr, &data_type, &buffer, &buffer_len, 100 / portTICK_RATE_MS);
-//         // ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
-//         //  ret = mwifi_read(src_addr, &data_type, data, &size, 100 / portTICK_RATE_MS);
-//         //  MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-//         //  MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
-
-//         if (ret == MDF_ERR_MWIFI_TIMEOUT || ret == ESP_ERR_MESH_TIMEOUT)
-//         {
-//             continue;
-//         }
-//         else if (ret != MDF_OK)
-//         {
-//             MDF_LOGW("<%s> mwifi_read", mdf_err_to_name(ret));
-//             goto FREE_MEM;
-//         }
-
-//         memcpy((uint16_t *)&recv_header, buffer, 2);
-//         memcpy((uint8_t *)&meshmsgtype, buffer + 2, 1);
-//         recv_header = ntohs(recv_header);
-//         if (recv_header == 0xA55A)
-//         {
-//             //ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
-//             uint8_t *mesh_data = (uint8_t *)malloc(buffer_len - 7);
-//             memcpy(mesh_data, buffer + 8, buffer_len - 7);
-//             if (meshmsgtype == UART)
-//             {
-//                 printf("UART:\n");
-//             }
-//             else if (meshmsgtype == SPI)
-//             {
-//                 printf("SPI:\n");
-//                 memcpy(sendbuf, mesh_data, buffer_len - 7);
-//             }
-//             uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, buffer_len - 7);
-
-//             // for (int i = 0; i < len - 11; i++)
-//             // {
-//             //     printf("%c", ((char *)wifi_data)[i]);
-//             // }
-//             free(mesh_data);
-//             // printf("\n\r");
-//         }
-
-//         /* forwoad to eth */
-//         if (s_ethernet_is_connected)
-//         {
-//             if (esp_eth_transmit(eth_handle, buffer, buffer_len) != ESP_OK)
-//             {
-//                 ESP_LOGE(TAG, "Ethernet send packet failed");
-//             }
-//         }
-
-//         // if (buffer_len == 98 || buffer_len == 74)
-//         // {
-//         //     MDF_LOGI("Got ICMP From WiFi");
-//         // }
-//         // if (buffer_len == 77 && s_ethernet_is_connected)
-//         // {
-//         //     MDF_LOGI("HBBOOM!");
-//         // }
-
-//     FREE_MEM:
-//         MDF_FREE(buffer);
-//     }
-
-//     MDF_LOGW("Node read task is exit");
-
-//     MDF_FREE(data);
-//     vTaskDelete(NULL);
-// }
 
 /**
  * @brief printing system information

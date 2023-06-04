@@ -128,8 +128,11 @@ static uint8_t meshmsgtype = 0;
 // uint8_t *recvbuf = (uint8_t *)MDF_MALLOC(129);
 // uint8_t *sendbuf = (uint8_t *)MDF_MALLOC(129);
 
-static uint8_t recvbuf[129];
-static uint8_t sendbuf[129];
+// static uint8_t recvbuf[129];
+// static uint8_t sendbuf[129];
+
+char sendbuf[129] = {0};
+char recvbuf[129] = {0}; //20230601，为了和主从机保持一致
 
 static nmea_msg GPSinfo[16];
 
@@ -428,7 +431,7 @@ static void spi_task(void *pvParameters)
 
         // spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         // received data from the master. Print it.
-        printf(" %d Received: %s\n", n, recvbuf);
+        // printf(" %d Received: %s\n", n, recvbuf);
         // added 0713 to transfer via wifi
         uint8_t SPIlength = 0;
 
@@ -535,21 +538,22 @@ static void node_read_task(void *arg)
             {
                 printf("SPI:\n");
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
-                meshmsgtype = 0;
-                free(mesh_data);
-                // flow_control_msg_t msg = {
-                //     .packet = mesh_data,
-                //     .length = size - 8};
-                // if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
-                // {
-                //     ESP_LOGE(TAG, "send SPI control message failed or timeout");
-                //     free(mesh_data);
-                // }
-                // // memcpy(sendbuf,mesh_data,size-8);
-                // if(NonRootID){
-                //     hb_Ninfo[NonRootID-1].ifspi=1;
-                // }
                 // meshmsgtype = 0;
+                // free(mesh_data);
+
+                flow_control_msg_t msg = {
+                    .packet = mesh_data,
+                    .length = size - 8};
+                if (xQueueSend(SPI_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
+                {
+                    ESP_LOGE(TAG, "send SPI control message failed or timeout");
+                    free(mesh_data);
+                }
+                // memcpy(sendbuf,mesh_data,size-8);
+                if(NonRootID){
+                    hb_Ninfo[NonRootID-1].ifspi=1;
+                }
+                meshmsgtype = 0;
             }
             else
             {

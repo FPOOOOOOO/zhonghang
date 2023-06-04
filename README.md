@@ -1121,8 +1121,19 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 2、3、5、6、10、16：2.4G可以，1.4G不行
 7：以太网偶尔通偶尔不通，怀疑是时钟
 12：wrong chip ID，怀疑8201芯片
-13、14：串口有问题，没有数据
+13、可以download，烧完一直download
+14：串口有问题，没有数据，download也没有
+
 
 ## <span id = "109">230531</span>
 1、SPI单端到电脑好像也不是很好使的样子nnd\
+
+## <span id = "110">230601</span>
+1、SPI——Non —— Root √ 2.4G \
+2、SPI——Root —— Non √ 2.4G \
+3、看看SPI - SPI的结果\
+4、拔掉SPI板的MOSI就能收到？？不让他输出就能收到？？真服了（Root不往下发的情况下）（Nonroot不往下发也是一样） —— 两边都往下发就不行，nnd\
+
+## <span id = "111">230604</span>
+1、2、5、6、7、12、16 是好的，待测试\
 2、
