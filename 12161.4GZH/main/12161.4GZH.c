@@ -67,7 +67,7 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_ID = 12;     // 本机的编号
+static uint8_t hb_ID = 6;     // 本机的编号
 static uint8_t hb_Layer = 3;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M

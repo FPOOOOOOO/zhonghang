@@ -1135,5 +1135,9 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 4、拔掉SPI板的MOSI就能收到？？不让他输出就能收到？？真服了（Root不往下发的情况下）（Nonroot不往下发也是一样） —— 两边都往下发就不行，nnd\
 
 ## <span id = "111">230604</span>
-1、2、5、6、7、12、16 是好的，待测试\
-2、
+1、   2、5、6、7、16 是好的，待测试，12还是wrong chip ID\
+2、   2 6 5、 2 6 12、 2 6 7试过能组网\
+
+
+## <span id = "112">230605</span>
+1、
