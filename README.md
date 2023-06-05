@@ -1140,4 +1140,9 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 
 
 ## <span id = "112">230605</span>
-1、
+1、 
+4、5 ：不是很连贯，第二次才成功，一直sendflowcontrolmessage fail
+12： wrong chip ID
+14: Ethernet start/ 没有Linked
+18: 串口有点问题 —— 重新焊接以后好了
+3、
