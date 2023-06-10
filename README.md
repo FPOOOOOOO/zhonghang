@@ -1142,7 +1142,20 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 ## <span id = "112">230605</span>
 1、 
 4、5 ：不是很连贯，第二次才成功，一直sendflowcontrolmessage fail
+8、9、10 ： 一次连上，不用手握
+
+
 12： wrong chip ID
 14: Ethernet start/ 没有Linked
 18: 串口有点问题 —— 重新焊接以后好了
 3、
+2R 6N 
+1 3 4 5 9 ：1对多联网没问题
+
+## <span id = "113">230608</span>
+1、12 14再检查一下 —— 以太网有点问题
+
+## <span id = "114">230610</span>
+1、12 14再检查一下 —— 以太网好像没有问题，就是妈妈的焊了一下电源的负极
+
+
