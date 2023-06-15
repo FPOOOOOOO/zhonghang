@@ -1156,6 +1156,50 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 1¡¢12 14ÔÙ¼ì²éÒ»ÏÂ ¡ª¡ª ÒÔÌ«ÍøÓĞµãÎÊÌâ
 
 ## <span id = "114">230610</span>
-1¡¢12 14ÔÙ¼ì²éÒ»ÏÂ ¡ª¡ª ÒÔÌ«ÍøºÃÏñÃ»ÓĞÎÊÌâ£¬¾ÍÊÇÂèÂèµÄº¸ÁËÒ»ÏÂµçÔ´µÄ¸º¼«
+1¡¢12 14ÔÙ¼ì²éÒ»ÏÂ ¡ª¡ª ÒÔÌ«Íø
+ºÃÏñÃ»ÓĞÎÊÌâ£¬¾ÍÊÇÂèÂèµÄº¸ÁËÒ»ÏÂµçÔ´µÄ¸º¼«
+ÍØÆË16 2 8 + SPI + 1.4G  1.5M
+ÍØÆË16 2 8 + 1.4G        1.5M
+ÍØÆË16 2 8 + 2.4G        3M
+
+## <span id = "115">230614</span>
+1¡¢zjgÀ­Ò»ÏÂ¾à
+2¡¢Ö±Á¬£º
+[20:29:55:702]Rx¡û?[0;31mE (958390) eth2sta: WiFi send packet failed: 12294[0m
+
+[20:29:56:312]Rx¡û?[0;31mE (959000) eth2sta: send flow control message failed or timeout[0m
 
 
+## <span id = "116">230615</span>
+1 ¿´Ò»ÏÂnorouteÌåÏÖÔÚÄÄ  ¡ª¡ª ÌåÏÖÔÚmwifi_config_t ÀïµÄrouter_ssidºÍrouter_password
+2 ÓÃÓĞgroupµÄ¿´Ò»ÏÂ»á²»»á³öÏÖÕâÑùµÄÇé¿ö£¬´ò¿ªLOGD£º¡ª¡ª¿´×Ô¼ºÊÇ·ñÊÕµ½¡¢ÊÇ·ñ¶Ï¿ªÄÜÖØÁ¬
+3 ´òÓ¡Â·ÓÉ±í¿´Ò»ÏÂ¡¢´ò¿ªprint_system_info_timercb
+4 ÓÃget routing table°ÑµãÁĞ³öÀ´¿´Ò»ÏÂÄÜ²»ÄÜµã¶ÔµãÍ¨ĞÅ
+¡¤¡¤¡¤
+        if (MWIFI_ADDR_IS_ANY(addrs_list) || MWIFI_ADDR_IS_BROADCAST(addrs_list)) {
+            ret = MDF_ERR_NO_MEM;
+            addrs_num  = esp_mesh_get_routing_table_size();
+            tmp_addrs = MDF_MALLOC(addrs_num * sizeof(mesh_addr_t));
+            MDF_ERROR_GOTO(!tmp_addrs, EXIT, "");
+            ESP_ERROR_CHECK(esp_mesh_get_routing_table((mesh_addr_t *)tmp_addrs,
+                            addrs_num * sizeof(mesh_addr_t), (int *)&addrs_num));
+
+            if (MWIFI_ADDR_IS_BROADCAST(addrs_list)) {
+                uint8_t root_mac[6] = {0x0};
+                ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_STA, root_mac));
+                addrs_remove((mesh_addr_t *)tmp_addrs, &addrs_num, (mesh_addr_t *)root_mac);
+                MDF_ERROR_GOTO(addrs_num > 2048 || addrs_num <= 0, EXIT, "dest_addrs_num: %d", addrs_num);
+            }
+
+            addrs_list = tmp_addrs;
+        }
+¡¤¡¤¡¤
+5 Ö¸¶¨¸ù½Úµã£¬¹Ø±Õ
+6¡¢ÒÉµã
+data_head.transmit_self = true;
+¸Ğ¾õ896ĞĞÓĞÂß¼­Ã¬¶Ü
+7¡¢mwifi_root_wirte(group) = mwifi_write
+8¡¢groupµÄ»°ÓĞÕâÁ½¸öÖµ
+        data_head.transmit_num = 1;
+        data_head.transmit_all = true;
+9¡¢µ¥¶ÀµÄ»°Ã»ÓĞ

@@ -49,7 +49,8 @@ static xQueueHandle SPI_control_queue = NULL;
 static bool g_root_got_ip = false;
 const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
                                      {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0};
+//uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0}; 
+uint8_t Rootaddr[6] = {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x98}; //1ºÅ
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
@@ -912,7 +913,7 @@ void app_main()
     mwifi_config_t config = {
         .channel = CONFIG_MESH_CHANNEL,
         .mesh_id = CONFIG_MESH_ID,
-        .mesh_type = CONFIG_DEVICE_TYPE,
+        .mesh_type = 2,
     };
 
     /**
