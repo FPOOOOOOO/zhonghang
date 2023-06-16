@@ -46,11 +46,9 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 static xQueueHandle SPI_control_queue = NULL;
-static bool g_root_got_ip = false;
-const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                     {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
-//uint8_t Rootaddr[6] = {0xFF, 0x0, 0x0, 0x1, 0x0, 0x0}; 
-uint8_t Rootaddr[6] = {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x98}; //1号
+static bool g_root_got_ip = false;; 
+//uint8_t Rootaddr[6] = {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x98}; //1号
+const uint8_t Rootaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
@@ -68,7 +66,7 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_ID = 3;     // 本机的编号
+static uint8_t hb_ID = 8;     // 本机的编号
 static uint8_t hb_Layer = 3;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M
@@ -465,7 +463,7 @@ static void node_read_task(void *arg)
         ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-        // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
+        MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         memcpy((uint16_t *)&pkg_addr, data + 5, 2);
         //ifmyaddr = pkg_addr & (1 << (hb_ID - 1));
@@ -619,7 +617,7 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = false;
+    data_type.group = true;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -832,7 +830,7 @@ static esp_err_t initialize_flow_control(void)
         return ESP_FAIL;
     }
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 1,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
     // if (ret != pdTRUE)
@@ -973,22 +971,23 @@ void app_main()
      *      group id can be a custom address
      */
 
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list,
-                                           sizeof(group_id_list) / sizeof(group_id_list[0])));
+    const uint8_t group_id_list_nonroot[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_nonroot, 
+                                sizeof(group_id_list_nonroot)/sizeof(group_id_list_nonroot)));
 
     /**
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 2,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //             NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     /* Periodic print system information */
-    // TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
-    //                                    true, NULL, print_system_info_timercb);
-    // xTimerStart(timer, 0);
+    TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
+                                       true, NULL, print_system_info_timercb);
+    xTimerStart(timer, 0);
 
     /**
      * @brief uart handle task:
@@ -996,7 +995,7 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
     //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

@@ -35,8 +35,8 @@ static mdf_err_t uart_initialize()
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
     };
     MDF_ERROR_ASSERT(uart_param_config(CONFIG_UART_PORT_NUM, &uart_config));
-    //MDF_ERROR_ASSERT(uart_set_pin(CONFIG_UART_PORT_NUM, CONFIG_UART_TX_IO, CONFIG_UART_RX_IO, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-    MDF_ERROR_ASSERT(uart_set_pin(CONFIG_UART_PORT_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    MDF_ERROR_ASSERT(uart_set_pin(CONFIG_UART_PORT_NUM, CONFIG_UART_TX_IO, CONFIG_UART_RX_IO, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    //MDF_ERROR_ASSERT(uart_set_pin(CONFIG_UART_PORT_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     MDF_ERROR_ASSERT(uart_driver_install(CONFIG_UART_PORT_NUM, 2 * BUF_SIZE, 2 * BUF_SIZE, 0, NULL, 0));
     return MDF_OK;
 }
@@ -74,7 +74,7 @@ static void uart_handle_task(void *arg)
             continue;
         }
 
-        ESP_LOGI("UART Recv data:", "%s", data);
+        //ESP_LOGI("UART Recv data:", "%s", data);
 
         json_root = cJSON_Parse((char *)data);
         MDF_ERROR_CONTINUE(!json_root, "cJSON_Parse, data format error, data: %s", data);
@@ -155,7 +155,7 @@ static void node_read_task(void *arg)
          */
         ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-        MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
+        //MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         /* forwoad to uart */
         uart_write_bytes(CONFIG_UART_PORT_NUM, data, size);
@@ -273,7 +273,9 @@ void app_main()
     mwifi_config_t config   = {
         .channel   = CONFIG_MESH_CHANNEL,
         .mesh_id   = CONFIG_MESH_ID,
-        .mesh_type = CONFIG_DEVICE_TYPE,
+        .mesh_type = 1,
+        //1 for root
+        //2 for nonroot
     };
 
     /**
@@ -295,11 +297,21 @@ void app_main()
      * @brief select/extend a group memebership here
      *      group id can be a custom address
      */
-    const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
-                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
 
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list, 
-                                sizeof(group_id_list)/sizeof(group_id_list[0])));
+    // const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+    //                                      {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+    // MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list, 
+    //                             sizeof(group_id_list)/sizeof(group_id_list[0])));
+
+    const uint8_t group_id_list_root[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_root, 
+                                sizeof(group_id_list_root)/sizeof(group_id_list_root)));
+
+
+    // const uint8_t group_id_list_nonroot[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
+    // MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_nonroot, 
+    //                             sizeof(group_id_list_nonroot)/sizeof(group_id_list_nonroot)));
+
 
     /**
      * @brief Data transfer between wifi mesh devices

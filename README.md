@@ -1171,8 +1171,8 @@ I (299523) mesh: [scan]new scanning time:600ms, beacon interval:300ms
 
 
 ## <span id = "116">230615</span>
-1 看一下noroute体现在哪  —— 体现在mwifi_config_t 里的router_ssid和router_password
-2 用有group的看一下会不会出现这样的情况，打开LOGD：——看自己是否收到、是否断开能重连
+1 看一下noroute体现在哪  —— 体现在mwifi_config_t 里的router_ssid和router_password ，Norouter例程没有问题，不知道哪里有问题了
+2 用有group的看一下会不会出现这样的情况，打开LOGD：——看自己是否收到、是否断开能重连 
 3 打印路由表看一下、打开print_system_info_timercb
 4 用get routing table把点列出来看一下能不能点对点通信
 ···
@@ -1202,4 +1202,7 @@ data_head.transmit_self = true;
 8、group的话有这两个值
         data_head.transmit_num = 1;
         data_head.transmit_all = true;
-9、单独的话没有
+9、把以太网关掉试一下看看 : 和以太网没关系
+
+## <span id = "116">230616</span>
+1、我只能说，一朵狗屎

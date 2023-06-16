@@ -44,7 +44,7 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 static xQueueHandle SPI_control_queue = NULL;
-uint8_t Multiaddr[6] = {0};
+const uint8_t Multiaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
 WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
@@ -669,7 +669,7 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = false;
+    data_type.group = true;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -848,7 +848,7 @@ static esp_err_t initialize_flow_control(void)
         return ESP_FAIL;
     }
     xTaskCreatePinnedToCore(eth2mesh_flow_control_task, "flow_ctl", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 1,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // BaseType_t ret = xTaskCreate(eth2mesh_flow_control_task, "flow_ctl", 2048, NULL, (tskIDLE_PRIORITY + 2), NULL);
     //  if (ret != pdTRUE)
@@ -1044,35 +1044,33 @@ void app_main()
     // const uint8_t group_id_list[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
     //                                      {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
 
-    const uint8_t group_id_list[2][6] = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE},
-                                         {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+    // const uint8_t group_id_list[2][6] = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE},
+    //                                      {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
 
-    const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xaa},
-                                          {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
+    // const uint8_t group_id_list2[2][6] = {{0x01, 0x00, 0x5e, 0xae, 0xae, 0xaa},
+    //                                       {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf}};
 
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
-                                           sizeof(group_id_list) / sizeof(group_id_list[0])));
+    // MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list2,
+    //                                        sizeof(group_id_list) / sizeof(group_id_list[0])));
 
-    for (int i = 0; i < 6; i++)
-    {
-        Multiaddr[i] = group_id_list[0][i];
-        //Multiaddr[i]= MWIFI_ADDR_BROADCAST;
-    }
+    const uint8_t group_id_list_root[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_root, 
+                                sizeof(group_id_list_root)/sizeof(group_id_list_root)));
 
 
     /**
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 2,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     /* Periodic print system information */
-    // TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
-    //                                    true, NULL, print_system_info_timercb);
-    // xTimerStart(timer, 0);
+    TimerHandle_t timer = xTimerCreate("print_system_info", 10000 / portTICK_RATE_MS,
+                                       true, NULL, print_system_info_timercb);
+    xTimerStart(timer, 0);
 
     /**
      * @brief uart handle task:
@@ -1080,9 +1078,8 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
 
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
-
     //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
