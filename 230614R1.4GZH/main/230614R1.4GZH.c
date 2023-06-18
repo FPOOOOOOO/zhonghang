@@ -38,6 +38,8 @@
 #define FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS (100)
 static bool node_parent_connected = false;
 static bool node_child_connected = false;
+uint8_t mesh_child_num = 0;
+
 static bool s_ethernet_is_connected = false;
 wifi_sta_list_t wifi_sta_list = {0x0};
 mesh_addr_t parent_bssid = {0};
@@ -202,18 +204,13 @@ static void uart_task(void *arg)
 {
     int recv_length = 0;
     mdf_err_t ret = MDF_OK;
-    cJSON *json_root = NULL;
-    cJSON *json_addr = NULL;
-    cJSON *json_group = NULL;
-    cJSON *json_data = NULL;
-    cJSON *json_dest_addr = NULL;
 
     // Configure a temporary buffer for the incoming data
     uint8_t *data = (uint8_t *)MDF_MALLOC(BUF_SIZE);
     size_t size = MWIFI_PAYLOAD_LEN;
-    char *jsonstring = NULL;
-    uint8_t dest_addr[MWIFI_ADDR_LEN] = {0};
+
     mwifi_data_type_t data_type = {0};
+    data_type.group = 1;
     uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
 
     MDF_LOGI("Uart handle task is running");
@@ -239,73 +236,23 @@ static void uart_task(void *arg)
         bzero(uart2mesh_data, recv_length + 8);
         hjypackup(UART, recv_length, 0, 0, data, uart2mesh_data);
 
-        esp_err_t ret = ESP_OK;
-        flow_control_msg_t msg = {
-            .packet = uart2mesh_data,
-            .length = recv_length + 8};
-        if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
-        {
-            // printf("eth2wifi is here:%s**********\n\r",buffer);
-            ESP_LOGE(TAG, "send flow control message failed or timeout");
-            free(uart2mesh_data);
-            ret = ESP_FAIL;
-        }
+        ret = mwifi_write(Multiaddr, &data_type, uart2mesh_data, recv_length + 8, true);
+        MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-        // json_root = cJSON_Parse((char *)data);
-        // MDF_ERROR_CONTINUE(!json_root, "cJSON_Parse, data format error, data: %s", data);
+FREE_MEM:
+        MDF_FREE(uart2mesh_data);
 
-        // /**
-        //  * @brief Check if it is a group address. If it is a group address, data_type.group = true.
-        //  */
-        // json_addr = cJSON_GetObjectItem(json_root, "dest_addr");
-        // json_group = cJSON_GetObjectItem(json_root, "group");
-
-        // if (json_addr)
+        // esp_err_t ret = ESP_OK;
+        // flow_control_msg_t msg = {
+        //     .packet = uart2mesh_data,
+        //     .length = recv_length + 8};
+        // if (xQueueSend(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) != pdTRUE)
         // {
-        //     data_type.group = false;
-        //     json_dest_addr = json_addr;
+        //     // printf("eth2wifi is here:%s**********\n\r",buffer);
+        //     ESP_LOGE(TAG, "send flow control message failed or timeout");
+        //     free(uart2mesh_data);
+        //     ret = ESP_FAIL;
         // }
-        // else if (json_group)
-        // {
-        //     data_type.group = true;
-        //     json_dest_addr = json_group;
-        // }
-        // else
-        // {
-        //     MDF_LOGW("Address not found");
-        //     cJSON_Delete(json_root);
-        //     continue;
-        // }
-
-        // /**
-        //  * @brief  Convert mac from string format to binary
-        //  */
-        // do
-        // {
-        //     uint32_t mac_data[MWIFI_ADDR_LEN] = {0};
-        //     sscanf(json_dest_addr->valuestring, MACSTR,
-        //            mac_data, mac_data + 1, mac_data + 2,
-        //            mac_data + 3, mac_data + 4, mac_data + 5);
-
-        //     for (int i = 0; i < MWIFI_ADDR_LEN; i++)
-        //     {
-        //         dest_addr[i] = mac_data[i];
-        //         ESP_LOGI(" ", "%x", Multiaddr[i]);
-        //     }
-        // } while (0);
-        // json_data = cJSON_GetObjectItem(json_root, "data");
-        // char *recv_data = cJSON_PrintUnformatted(json_data);
-
-        // size = asprintf(&jsonstring, "{\"src_addr\": \"" MACSTR "\", \"data\": %s}", MAC2STR(sta_mac), recv_data);
-        // ret = mwifi_write(dest_addr, &data_type, jsonstring, size, true);
-
-        //     ret = mwifi_root_write(Multiaddr, 1, &data_type, jsonstring, size, true);
-        //     MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
-
-        // FREE_MEM:
-        //     MDF_FREE(recv_data);
-        //     MDF_FREE(jsonstring);
-        //     cJSON_Delete(json_root);
     }
 
     MDF_LOGI("Uart handle task is exit");
@@ -644,7 +591,8 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     {
         hjyctrl(buffer, len);
     }
-    //         if (len){
+
+    // if (len){
     //     MDF_LOGI("ETH Downlinking...");
     // }
     //         if (len == 98 || len == 74)
@@ -818,12 +766,16 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
     case MDF_EVENT_MWIFI_CHILD_CONNECTED:
         MDF_LOGI("Child is connected on ap interface");
         node_child_connected = true;
+        mesh_child_num++;
         esp_wifi_ap_get_sta_list(&wifi_sta_list);
         break;
 
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
-        node_child_connected = false;
+        mesh_child_num--;
+        if(mesh_child_num == 0){
+            node_child_connected = false;
+        }
         break;
 
     default:
@@ -1062,7 +1014,7 @@ void app_main()
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+1,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
@@ -1078,7 +1030,7 @@ void app_main()
      *  forward data item to destination address in mesh network
      */
     xTaskCreate(uart_task, "uart_task", 4 * 1024,
-                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
+                NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 4, NULL);
 
     //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
     //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
