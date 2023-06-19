@@ -1233,4 +1233,4 @@ data_head.transmit_self = true;
 
 ## <span id = "118">230619</span>
 1、同一个groupid可能相互影响，换成不同的UID
-2、写一个网络栈
+2、写一个网络栈？？
