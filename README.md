@@ -1234,3 +1234,10 @@ data_head.transmit_self = true;
 ## <span id = "118">230619</span>
 1、同一个groupid可能相互影响，换成不同的UID
 2、写一个网络栈？？
+3、MAC地址顺序：STA AP BLE ETH。测试使用1、4、5
+4、改进方法，从现在连接的MAC里找
+
+## <span id = "119">230620</span>
+1、再改一套和iperf一样的，看看iperf没有root的连接方法的效果\
+2、现在好像还是没有完全隔离
+3、

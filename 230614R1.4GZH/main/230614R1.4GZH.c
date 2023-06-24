@@ -46,7 +46,8 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 static xQueueHandle SPI_control_queue = NULL;
-const uint8_t Multiaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
+uint8_t Multiaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
+uint8_t NowAddr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 WORD_ALIGNED_ATTR char test14G[77] = "hihu";
 
 static const uint16_t header = 0xA55A;
@@ -63,44 +64,45 @@ static uint32_t hb_BaudRate = 115200;
 static uint16_t hb_Freq = 1400; // 1400M
 static uint16_t hb_Route = 0;   // boardcast
 
-//macaddr before 0412
-// uint8_t NONROOT_MAC[16][6] = {
-//     {0xc4, 0xde, 0xe2, 0xc0, 0x0a, 0xd4}, // 1   黑垫
-//     {},                                   // 2   5号
-//     {0xc8, 0xf0, 0x9e, 0x1a, 0x40, 0x64}, // 3   3号
-//     {},                                   // 4
-//     {0xc8, 0xf0, 0x9e, 0x1a, 0x3f, 0x84}, // 5
-//     {},                                   // 6
-//     {0x24, 0x4c, 0xab, 0x20, 0xe9, 0x68}, // 7   7号
-//     {0x24, 0x4c, 0xab, 0xd2, 0xff, 0x74}, // 8   8号
-//     {},                                   // 9
-//     {0x24, 0x4c, 0xab, 0x15, 0x63, 0x20}, // 10  10号
-//     {},                                   // 11
-//     {},                                   // 12
-//     {},                                   // 13
-//     {},                                   // 14
-//     {},                                   // 15
-//     {}                                    // 16
-// };
-
-//macaddr 0412
+// macaddr 0412
 uint8_t NONROOT_MAC[16][6] = {
     {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x98}, // 1   N1
     {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0xc4}, // 2   N2
     {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0x50}, // 3   N3
-    {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0xf8}, // 4   N4
+    {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0xf8}, // 4   N4STA
+    //{0x80, 0x64, 0x6f, 0x13, 0xdd, 0x80}, // 10 
     {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x54}, // 5   N5
     {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0xc0}, // 6   N6
-    {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0x14}, // 7   N7
+    {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0x14}, // 7   N7STA
     {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0xd8}, // 8   N8
     {0xb0, 0xb2, 0x1c, 0x8f, 0x91, 0xe8}, // 9   N9
-    {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0xc0}, // 10  N10
+    {0x80, 0x64, 0x6f, 0x13, 0xdd, 0x80}, // 10  N10 0x80, 0x64, 0x6f, 0x13, 0xdd, 0x80
     {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0xd8}, // 11  N11
     {},                                   // 12
     {0xb0, 0xb2, 0x1c, 0x8f, 0x93, 0x2c}, // 13  N13
     {},                                   // 14
     {},                                   // 15
-    {}                                    // 16
+    {0x24, 0x4C, 0xab, 0x20, 0xe9, 0x58}  // 16  N16
+};
+
+uint8_t NONROOT_PC_MAC[16][6] = {
+    {},                                   // 1   N1
+    {},                                   // 2   N2
+    {},                                   // 3   N3
+    {0x2C, 0xEA, 0x7F, 0xFE, 0x74, 0xCE}, // 4   wyPC
+    {},                                   // 5   N5
+    {},                                   // 6   N6
+    {0xF8, 0xE4, 0x3B, 0xC7, 0xFD, 0x5E}, // 7   hihjyPC
+    {},                                   // 8   N8
+    {},                                   // 9   N9
+    //{0x00, 0x1C, 0xC0, 0x17, 0xDF, 0x31}, // 10  示波器
+    {0xDA, 0x65, 0x5A, 0xBD, 0xDA, 0x65}, // 10  示波器
+    {},                                   // 11  N11
+    {},                                   // 12
+    {},                                   // 13  N13
+    {},                                   // 14
+    {},                                   // 15
+    {}  // 16 显微镜 0xDA, 0x65, 0x5A, 0xBD, 0xDA, 0x65
 };
 
 //
@@ -134,7 +136,7 @@ static uint8_t meshmsgtype = 0;
 // static uint8_t sendbuf[129];
 
 char sendbuf[129] = {0};
-char recvbuf[129] = {0}; //20230601，为了和主从机保持一致
+char recvbuf[129] = {0}; // 20230601，为了和主从机保持一致
 
 static nmea_msg GPSinfo[16];
 
@@ -146,6 +148,8 @@ typedef struct
 {
     void *packet;
     uint16_t length;
+    uint8_t ToMAC[6];
+    bool group;
 } flow_control_msg_t;
 
 static const char *TAG = "eth2mesh";
@@ -180,6 +184,44 @@ static void hjyctrl(void *buffer, uint16_t len)
     hb_SPIclk = data[5] << 24 | data[6] << 16 | data[7] << 8 | data[8]; // 8M
     hb_BaudRate = data[9] << 24 | data[10] << 16 | data[11] << 8 | data[12];
     printf("Root CTRL:%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
+}
+
+static bool hjyfilter(flow_control_msg_t *msg)
+{
+    // printf("This time len is %d \n\r", msg.length);
+    // printf("FUCK1 \n\r");
+    uint8_t msgMAC[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    memcpy(msg->ToMAC, Multiaddr, 6);
+    if (msg->length == 42 || msg->length == 60 || msg->length == 64)
+    {
+        // printf("FUCK2 \n\r");
+        return true;
+    }
+    else if (msg->length == 74 || msg->length == 94)
+    {
+        // printf("FUCK3 \n\r");
+        return true;
+    }
+    else if (msg->length == 1442)
+    {
+        memcpy(msgMAC, msg->packet, 6);
+        int fuck = 77;
+        for (int i = 0; i < 16; i++)
+        {
+            //fuck = memcmp(msgMAC, NONROOT_PC_MAC[i], 6);
+            //printf("fuck = %d", fuck);
+            if (memcmp(msgMAC, NONROOT_PC_MAC[i], 6) == 0)
+            {
+                memcpy(msg->ToMAC, NONROOT_MAC[i], 6);
+                msg->group = false;
+                //printf("\n ");
+                return true;
+            }
+        }
+    }
+    // printf("FUCK4 \n\r");
+    free(msg->packet);
+    return false;
 }
 
 /**
@@ -239,7 +281,7 @@ static void uart_task(void *arg)
         ret = mwifi_write(Multiaddr, &data_type, uart2mesh_data, recv_length + 8, true);
         MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-FREE_MEM:
+    FREE_MEM:
         MDF_FREE(uart2mesh_data);
 
         // esp_err_t ret = ESP_OK;
@@ -463,7 +505,7 @@ static void node_read_task(void *arg)
         {
             memcpy((uint16_t *)&NonRootID, data + 5, 2);
             NonRootID = ntohs(NonRootID);
-            printf("NonRootID : %d \n", NonRootID); //这里要用的话呢，ETH就不是很好判断
+            printf("NonRootID : %d \n", NonRootID); // 这里要用的话呢，ETH就不是很好判断
             // ESP_LOGI(TAG, "RECV_HEADER IS: %x", recv_header);
             // ESP_LOGI(TAG, "size is: %d", size);
             memcpy((uint8_t *)&meshmsgtype, data + 2, 1);
@@ -475,8 +517,9 @@ static void node_read_task(void *arg)
                 printf("UART:\n");
                 NMEA_GNGLL_Analysis((nmea_msg *)(&GPSinfo[NonRootID - 1]), mesh_data);
                 uart_write_bytes(CONFIG_UART_PORT_NUM, mesh_data, size - 8);
-                if(NonRootID){
-                    hb_Ninfo[NonRootID-1].ifuart=1;
+                if (NonRootID)
+                {
+                    hb_Ninfo[NonRootID - 1].ifuart = 1;
                 }
                 meshmsgtype = 0;
                 free(mesh_data);
@@ -497,8 +540,9 @@ static void node_read_task(void *arg)
                     free(mesh_data);
                 }
                 // memcpy(sendbuf,mesh_data,size-8);
-                if(NonRootID){
-                    hb_Ninfo[NonRootID-1].ifspi=1;
+                if (NonRootID)
+                {
+                    hb_Ninfo[NonRootID - 1].ifspi = 1;
                 }
                 meshmsgtype = 0;
             }
@@ -586,11 +630,19 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     esp_err_t ret = ESP_OK;
     flow_control_msg_t msg = {
         .packet = buffer,
-        .length = len};
-    if (len == 100)
+        .length = len,
+        .ToMAC = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+        .group = true};
+
+    if (!hjyfilter(&msg))
     {
-        hjyctrl(buffer, len);
+        return ret;
     }
+
+    // if (len == 100)
+    // {
+    //     hjyctrl(buffer, len);
+    // }
 
     // if (len){
     //     MDF_LOGI("ETH Downlinking...");
@@ -617,7 +669,6 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = true;
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -629,10 +680,12 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
-                    // res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
-                    //res = mwifi_write(MWIFI_ADDR_BROADCAST, &data_type, msg.packet, msg.length, true);     
-                    res = mwifi_write(Multiaddr, &data_type, msg.packet, msg.length, true);
-                    //res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
+                    data_type.group = msg.group;
+                    //  printf("group = %d", data_type.group);
+                    //  res = mwifi_write(wifi_sta_list.sta[0].mac, &data_type, msg.packet, msg.length, true);
+                    //  res = mwifi_write(MWIFI_ADDR_BROADCAST, &data_type, msg.packet, msg.length, true);
+                    res = mwifi_write(msg.ToMAC, &data_type, msg.packet, msg.length, true);
+                    // res = mwifi_root_write(Multiaddr, 1, &data_type, msg.packet, msg.length, true);
                 } while (res && timeout < FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS);
                 // MDF_ERROR_GOTO(res != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(res));
                 if (res != MDF_OK)
@@ -773,7 +826,8 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
         mesh_child_num--;
-        if(mesh_child_num == 0){
+        if (mesh_child_num == 0)
+        {
             node_child_connected = false;
         }
         break;
@@ -841,7 +895,7 @@ static void hb_task(void *args)
                 {
                     hb_Ninfo[j].Connected = 1;
                     hb_Ninfo[j].rssi = wifi_sta_list.sta[i].rssi;
-                    hb_Ninfo[j].ifeth = 1; //在NodeRead里更新过了
+                    hb_Ninfo[j].ifeth = 1; // 在NodeRead里更新过了
                     // hb_Ninfo[j].ifspi 在NodeRead里更新过了
                     // hb_Ninfo[j].ifuart 在NodeRead里更新过了
                     hb_Ninfo[j].GPSL = GPSinfo[j].longitude;
@@ -1006,15 +1060,14 @@ void app_main()
     //                                        sizeof(group_id_list) / sizeof(group_id_list[0])));
 
     const uint8_t group_id_list_root[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_root, 
-                                sizeof(group_id_list_root)/sizeof(group_id_list_root)));
-
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_root,
+                                           sizeof(group_id_list_root) / sizeof(group_id_list_root)));
 
     /**
      * @brief Data transfer between wifi mesh devices
      */
     xTaskCreatePinnedToCore(node_read_task, "node_read_task", 4 * 1024,
-                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+1,
+                            NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 1,
                             NULL, CONFIG_MDF_TASK_PINNED_TO_CORE);
     // xTaskCreate(node_read_task, "node_read_task", 4 * 1024,
     //  NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY, NULL);
@@ -1029,9 +1082,9 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    xTaskCreate(uart_task, "uart_task", 4 * 1024,
+    xTaskCreate(uart_task, "uart_task", 2 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 4, NULL);
 
-    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
-    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY+6, NULL);
+    // xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }

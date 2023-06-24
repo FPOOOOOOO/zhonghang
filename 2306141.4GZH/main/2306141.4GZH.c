@@ -40,7 +40,7 @@
 #define FLOW_CONTROL_WIFI_SEND_TIMEOUT_MS (100)
 static bool node_parent_connected = false;
 static bool node_child_connected = false;
-uint8_t mesh_child_num =0;
+uint8_t mesh_child_num = 0;
 
 static bool s_ethernet_is_connected = false;
 wifi_sta_list_t wifi_sta_list = {0x0};
@@ -48,9 +48,13 @@ mesh_addr_t parent_bssid = {0};
 esp_eth_handle_t eth_handle = NULL;
 static xQueueHandle flow_control_queue = NULL;
 static xQueueHandle SPI_control_queue = NULL;
-static bool g_root_got_ip = false;; 
-//uint8_t Rootaddr[6] = {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0x98}; //1号
-const uint8_t Rootaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
+static bool g_root_got_ip = false;
+;
+uint8_t Rootaddr[6] = {0xb0, 0xb2, 0x1c, 0x8f, 0x92, 0xd8}; //1号
+
+//const uint8_t Rootaddr[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xaf};
+
+uint8_t ROOT_PC_MAC[6] = {0x9C, 0x74, 0x1A, 0x73, 0x8F, 0x83};
 
 static const uint16_t header = 0xA55A;
 static uint16_t recv_header = 0x0000;
@@ -68,7 +72,7 @@ static uint8_t ifmyaddr = 0;  // 0=不是自己的包
 // } hb_msg;
 
 static uint8_t hb_RorN = 1;          // 主从
-static uint8_t hb_ID = 7;     // 本机的编号
+static uint8_t hb_ID = 10;            // 本机的编号
 static uint8_t hb_Layer = 3;         // 第二层
 static uint8_t hb_MorS = 1;          // Slave
 static uint32_t hb_SPIclk = 8000000; // 8M
@@ -100,7 +104,7 @@ static uint8_t meshmsgtype = 0;
 // static uint8_t sendbuf[129];
 
 char sendbuf[129] = {0};
-char recvbuf[129] = {0}; //20230601，为了和主从机保持一致
+char recvbuf[129] = {0}; // 20230601，为了和主从机保持一致
 
 #define SENDER_HOST HSPI_HOST
 #define RCV_HOST HSPI_HOST
@@ -109,6 +113,8 @@ typedef struct
 {
     void *packet;
     uint16_t length;
+    uint8_t ToMAC[6];
+    bool group;
 } flow_control_msg_t;
 
 static const char *TAG = "eth2mesh";
@@ -132,8 +138,9 @@ static void hjypackup(uint8_t type, uint16_t len, int8_t rssi, uint16_t connecte
     memcpy(CRCpackage + 8, buffer, len); // buffer
 }
 
-static void hjyctrl(void *buffer,uint16_t len){
-    //for now lack route
+static void hjyctrl(void *buffer, uint16_t len)
+{
+    // for now lack route
     uint8_t *data;
     data = (uint8_t *)buffer;
     hb_RorN = data[0]; // 主从
@@ -143,6 +150,34 @@ static void hjyctrl(void *buffer,uint16_t len){
     hb_SPIclk = data[5] << 24 | data[6] << 16 | data[7] << 8 | data[8]; // 8M
     hb_BaudRate = data[9] << 24 | data[10] << 16 | data[11] << 8 | data[12];
     printf("NonRoot CTRL:%d %d %d %d %d %d \n\r", hb_RorN, hb_ID, hb_MorS, hb_Freq, hb_SPIclk, hb_BaudRate);
+}
+
+static bool hjyfilter(flow_control_msg_t msg)
+{
+    //printf("This time len is %d \n\r", msg.length);
+    uint8_t msgMAC[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    //memcpy(msg.ToMAC, Rootaddr, 6);
+    if (msg.length == 42 || msg.length == 60 || msg.length == 64)
+    {
+        return true;
+    }
+    else if (msg.length == 74 || msg.length == 94)
+    {
+        return true;
+    }
+    else if (msg.length == 1442)
+    {
+        return true;
+        // memcpy(msgMAC, msg.packet, 6);
+        // if (memcmp(msgMAC, ROOT_PC_MAC, 6) == 0)
+        // {
+        //     //memcpy(msg.ToMAC, Rootaddr, 6);
+        //     msg.group = false;
+        //     return true;
+        // }
+    }
+    free(msg.packet);
+    return false;
 }
 
 /**
@@ -173,7 +208,7 @@ static void uart_task(void *arg)
     size_t size = MWIFI_PAYLOAD_LEN;
 
     mwifi_data_type_t data_type = {0};
-    data_type.group = 1;
+    //data_type.group = 1;
     uint8_t sta_mac[MWIFI_ADDR_LEN] = {0};
 
     MDF_LOGI("Uart handle task is running");
@@ -194,16 +229,16 @@ static void uart_task(void *arg)
         }
 
         // ESP_LOGI("UART Recv data:", "%s", data);
+    //排除N7点的串口干扰
+    //     uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8); // 容纳字符串最后一位
+    //     bzero(uart2mesh_data, recv_length + 8);                       // 容纳字符串
+    //     hjypackup(UART, recv_length, rssi, hb_ID, data, uart2mesh_data);
 
-        uint8_t *uart2mesh_data = (uint8_t *)malloc(recv_length + 8); // 容纳字符串最后一位
-        bzero(uart2mesh_data, recv_length + 8);                       // 容纳字符串
-        hjypackup(UART, recv_length, rssi, hb_ID, data, uart2mesh_data);
+    //     ret = mwifi_write(Rootaddr, &data_type, uart2mesh_data, recv_length + 8, true);
+    //     MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
 
-        ret = mwifi_write(Rootaddr, &data_type, uart2mesh_data, recv_length + 8, true);
-        MDF_ERROR_GOTO(ret != MDF_OK, FREE_MEM, "<%s> mwifi_root_write", mdf_err_to_name(ret));
-
-FREE_MEM:
-        MDF_FREE(uart2mesh_data);
+    // FREE_MEM:
+    //     MDF_FREE(uart2mesh_data);
 
         // esp_err_t ret = ESP_OK;
         // flow_control_msg_t msg = {
@@ -280,7 +315,7 @@ static void spi_task(void *pvParameters)
     memset(sendbuf, 0, 129);
     // ESP_LOGE(TAG, "I am 2");
     flow_control_msg_t SPI_msg;
-    
+
     while (1)
     {
         // Clear receive buffer, set send buffer to something sane
@@ -296,14 +331,12 @@ static void spi_task(void *pvParameters)
         // ESP_LOGE(TAG, "I am 4");
         //  Set up a transaction of 128 bytes to send/receive
 
-
         if (xQueueReceive(SPI_control_queue, &SPI_msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
         {
             memcpy(sendbuf, SPI_msg.packet, SPI_msg.length);
-            //先不释放，看一下情况
+            // 先不释放，看一下情况
             free(SPI_msg.packet);
         }
-
 
         t.length = 128 * 8;
         t.tx_buffer = sendbuf;
@@ -318,7 +351,7 @@ static void spi_task(void *pvParameters)
 
         ret = spi_slave_transmit(RCV_HOST, &t, portMAX_DELAY);
         // ESP_LOGE(TAG, "I am 5");
-        //ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
+        // ESP_LOGE(TAG, "SPI. (%s)", esp_err_to_name(ret)); //   Equals  spi_slave_queue_trans() + spi_slave_get_trans_results
         // ESP_LOGI(TAG, "isReady is: %d \n\r",isReady);
 
         memset(sendbuf, 0, 129);
@@ -411,15 +444,15 @@ static void node_read_task(void *arg)
         ret = mwifi_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         // ret = mwifi_root_read(src_addr, &data_type, data, &size, portMAX_DELAY);
         MDF_ERROR_CONTINUE(ret != MDF_OK, "<%s> mwifi_read", mdf_err_to_name(ret));
-        //MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
+        // MDF_LOGI("Node receive, addr: " MACSTR ", size: %d, data: %s", MAC2STR(src_addr), size, data);
 
         memcpy((uint16_t *)&pkg_addr, data + 5, 2);
-        //ifmyaddr = pkg_addr & (1 << (hb_ID - 1));
+        // ifmyaddr = pkg_addr & (1 << (hb_ID - 1));
 
         memcpy((uint16_t *)&recv_header, data, 2);
         recv_header = ntohs(recv_header);
 
-        //if (recv_header == 0xA55A && (pkg_addr == 0 || ifmyaddr > 0))
+        // if (recv_header == 0xA55A && (pkg_addr == 0 || ifmyaddr > 0))
         if (recv_header == 0xA55A)
         {
             // ESP_LOGI(TAG, "size is: %d", size);
@@ -451,11 +484,12 @@ static void node_read_task(void *arg)
                 // }
                 // // memcpy(sendbuf, mesh_data, size-8);
                 // meshmsgtype = 0;
-            }else{
+            }
+            else
+            {
                 free(mesh_data);
             }
 
-            
             // for (int i = 0; i < len - 11; i++)
             // {
             //     printf("%c", ((char *)wifi_data)[i]);
@@ -533,7 +567,15 @@ static esp_err_t pkt_eth2mesh(esp_eth_handle_t eth_handle, uint8_t *buffer, uint
     esp_err_t ret = ESP_OK;
     flow_control_msg_t msg = {
         .packet = buffer,
-        .length = len};
+        .length = len,
+        .ToMAC = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae},
+        .group = false};
+
+    // if (!hjyfilter(msg))
+    // {
+    //     return ret;
+    // }
+
     if (len == 100)
     {
         hjyctrl(buffer, len);
@@ -565,7 +607,7 @@ static void eth2mesh_flow_control_task(void *args)
     int res = 0;
     uint32_t timeout = 0;
     mwifi_data_type_t data_type = {0};
-    data_type.group = true;
+
     while (1)
     {
         if (xQueueReceive(flow_control_queue, &msg, pdMS_TO_TICKS(FLOW_CONTROL_QUEUE_TIMEOUT_MS)) == pdTRUE)
@@ -577,6 +619,7 @@ static void eth2mesh_flow_control_task(void *args)
                 {
                     vTaskDelay(pdMS_TO_TICKS(timeout));
                     timeout += 2;
+                    // data_type.group = msg.group;
                     res = mwifi_write(Rootaddr, &data_type, msg.packet, msg.length, true);
                     // res = mwifi_write(NULL, &data_type, msg.packet, msg.length, true);
 
@@ -671,7 +714,7 @@ static mdf_err_t eth_init()
     eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
     phy_config.phy_addr = CONFIG_EXAMPLE_ETH_PHY_ADDR;
-    //phy_config.phy_addr = 0;
+    // phy_config.phy_addr = 0;
     phy_config.reset_gpio_num = CONFIG_EXAMPLE_ETH_PHY_RST_GPIO;
     mac_config.smi_mdc_gpio_num = CONFIG_EXAMPLE_ETH_MDC_GPIO;
     mac_config.smi_mdio_gpio_num = CONFIG_EXAMPLE_ETH_MDIO_GPIO;
@@ -755,7 +798,8 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
     case MDF_EVENT_MWIFI_CHILD_DISCONNECTED:
         MDF_LOGI("Child is disconnected on ap interface");
         mesh_child_num--;
-        if(mesh_child_num == 0){
+        if (mesh_child_num == 0)
+        {
             node_child_connected = false;
         }
         break;
@@ -849,7 +893,7 @@ static void hb_task(void *args)
             {
                 ESP_LOGE(TAG, "Ethernet send packet failed");
             }
-            //MDF_LOGI("ETH Heatbeading");
+            // MDF_LOGI("ETH Heatbeading");
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -924,8 +968,8 @@ void app_main()
      */
 
     const uint8_t group_id_list_nonroot[6] = {0x01, 0x00, 0x5e, 0xae, 0xae, 0xae};
-    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_nonroot, 
-                                sizeof(group_id_list_nonroot)/sizeof(group_id_list_nonroot)));
+    MDF_ERROR_ASSERT(esp_mesh_set_group_id((mesh_addr_t *)group_id_list_nonroot,
+                                           sizeof(group_id_list_nonroot) / sizeof(group_id_list_nonroot)));
 
     /**
      * @brief Data transfer between wifi mesh devices
@@ -946,8 +990,8 @@ void app_main()
      *  receive json format data,eg:`{"dest_addr":"30:ae:a4:80:4c:3c","data":"send data"}`
      *  forward data item to destination address in mesh network
      */
-    xTaskCreate(uart_task, "uart_task", 4 * 1024,
+    xTaskCreate(uart_task, "uart_task", 2 * 1024,
                 NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 4, NULL);
-    //xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
-    //xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
+    // xTaskCreate(spi_task, "spi_task", 4096, NULL, CONFIG_MDF_TASK_DEFAULT_PRIOTY + 6, NULL);
+    // xTaskCreate(hb_task, "hb_task", 1024, NULL, 10, NULL);
 }
